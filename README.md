@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SmartCare
 
-## Getting Started
+**AI-Powered Healthcare Management & Patient Assistance Platform**
 
-First, run the development server:
+SmartCare is an academic software project built as a college demonstration of a modern, full-stack healthcare management system. It is **not** a clinically validated medical device or real emergency-response system.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 (strict) |
+| UI | React 19 + Tailwind CSS v4 |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth |
+| Storage | Supabase Storage |
+| Authorization | PostgreSQL Row Level Security (RLS) |
+| Charts | Recharts |
+| Forms | React Hook Form + Zod |
+| Tables | TanStack Table |
+| State | Zustand (when genuinely needed) |
+| AI | Server-side abstraction layer |
+| Deployment | Vercel |
+
+---
+
+## Local Development Setup
+
+### Prerequisites
+
+- Node.js v20 or later
+- npm v10 or later
+- A Supabase project (when connecting the database)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/INSANE-67/smartcare.git
+cd smartcare
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Copy `.env.example` to `.env.local` and fill in your values:
+
+```bash
+cp .env.example .env.local
+```
+
+> **Never commit `.env.local`.** It is gitignored by default.
+
+### 4. Start the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. Lint
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+```
 
-## Learn More
+### 6. Build (production check)
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── (auth)/          # Authentication routes (login, register)
+│   ├── (dashboard)/     # Protected dashboard routes
+│   ├── globals.css      # Global styles (Tailwind v4)
+│   ├── layout.tsx       # Root layout
+│   └── page.tsx         # Landing / home page
+├── components/
+│   └── ui/              # Shared primitive UI components
+├── lib/
+│   ├── supabase/        # Supabase client setup
+│   ├── ai/              # AI abstraction layer (server-only)
+│   └── utils.ts         # Shared utilities
+├── types/
+│   └── index.ts         # Shared TypeScript types
+└── hooks/               # Custom React hooks
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security & Medical Safety Notes
+
+- Supabase service-role credentials are **never** exposed to the browser.
+- All secrets are managed through environment variables.
+- Database authorization uses PostgreSQL Row Level Security (RLS).
+- Patient medical information is never exposed across users without appropriate authorization.
+- AI features assist with healthcare information only — they do **not** diagnose, prescribe, or claim clinical certainty.
+- AI-generated content is always clearly distinguishable from original medical records.
+
+---
+
+## Development Workflow
+
+```
+PLAN → IMPLEMENT → RUN → BROWSER TEST → FIX → TEST AGAIN → GIT COMMIT
+```
+
+- Feature branches are used for all feature development.
+- Commits are kept small and meaningful.
+- `main` is never modified without team approval.
+
+---
+
+## License
+
+Academic project — not for clinical or commercial use.

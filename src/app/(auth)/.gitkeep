@@ -1,0 +1,6 @@
+// This file intentionally left minimal.
+// Auth routes will be added here in Phase 1 (authentication).
+// Example structure:
+//   app/(auth)/login/page.tsx
+//   app/(auth)/register/page.tsx
+//   app/(auth)/layout.tsx

@@ -1,0 +1,13 @@
+/**
+ * Supabase client setup — scaffold only.
+ *
+ * Clients will be added in Phase 1 (Supabase integration):
+ *
+ *   - browser.ts   → createBrowserClient() for Client Components
+ *   - server.ts    → createServerClient() for Server Components / Route Handlers
+ *   - middleware.ts → createServerClient() for Middleware
+ *
+ * The service-role admin client must NEVER be used in browser-side code.
+ *
+ * See: https://supabase.com/docs/guides/auth/server-side/nextjs
+ */

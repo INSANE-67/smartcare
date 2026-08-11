@@ -1,0 +1,3 @@
+// Shared primitive UI components will live here.
+// Examples: Button, Input, Card, Badge, Modal, etc.
+// These components must have no business logic — pure presentational.

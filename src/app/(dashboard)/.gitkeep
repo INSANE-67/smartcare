@@ -1,0 +1,7 @@
+// This file intentionally left minimal.
+// Dashboard routes will be added here in Phase 2 (dashboards).
+// Example structure:
+//   app/(dashboard)/patient/page.tsx
+//   app/(dashboard)/doctor/page.tsx
+//   app/(dashboard)/admin/page.tsx
+//   app/(dashboard)/layout.tsx

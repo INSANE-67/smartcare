@@ -1,0 +1,8 @@
+// Custom React hooks will live here.
+// Examples:
+//   useUser.ts       → Current authenticated user
+//   useMediaQuery.ts → Responsive design helpers
+//
+// Rules:
+//   - Hooks must be Client Component compatible (no server-only imports)
+//   - Hooks that fetch data should use Supabase browser client, never service-role
