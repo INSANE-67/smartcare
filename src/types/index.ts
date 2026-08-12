@@ -14,9 +14,12 @@ export type {
   RelationshipStatus,
   InitiatorRole,
   ProfileRow,
-  PatientProfileRow,
-  DoctorProfileRow,
+  DoctorRow,
+  DoctorInsert,
+  DoctorUpdate,
+  DoctorAdminUpdate,
   DoctorPatientRelationshipRow,
+  PatientProfileRow,
   AuditLogRow,
   Database,
 } from "./database";
@@ -32,7 +35,7 @@ export type ApiResult<T> =
 // ─────────────────────────────────────────────────────────────────────────────
 // Data Transfer Objects (DTOs)
 // Minimal, safe shapes returned by the Data Access Layer.
-// Never include sensitive fields (e.g. raw role internals).
+// Never include fields that could leak sensitive internal state.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Minimal profile info safe to pass to Client Components */
