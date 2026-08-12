@@ -1,22 +1,25 @@
 /**
- * Shared TypeScript types and interfaces for SmartCare.
+ * Shared application-level TypeScript types for SmartCare.
  *
- * This file exports application-wide types.
- * Database-generated types (from Supabase) will be in a separate
- * `src/types/database.ts` file (auto-generated, not hand-written).
- *
- * Naming conventions:
- *   - Use `type` for union/intersection types and simple shapes
- *   - Use `interface` for object shapes that may be extended
- *   - Prefix database row types with the table name (e.g., `PatientRow`)
- *   - Prefix component prop types with the component name (e.g., `ButtonProps`)
+ * Database row types live in src/types/database.ts.
+ * This file re-exports the commonly used ones and adds
+ * application-specific types (DTOs, API responses, etc.).
  */
 
-// ─────────────────────────────────────────────────────────────────────────────
-// User Roles
-// ─────────────────────────────────────────────────────────────────────────────
-
-export type UserRole = "patient" | "doctor" | "admin";
+// Re-export database enums and rows used throughout the app
+export type {
+  UserRole,
+  BloodType,
+  Gender,
+  RelationshipStatus,
+  InitiatorRole,
+  ProfileRow,
+  PatientProfileRow,
+  DoctorProfileRow,
+  DoctorPatientRelationshipRow,
+  AuditLogRow,
+  Database,
+} from "./database";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Generic API response wrapper
@@ -25,3 +28,29 @@ export type UserRole = "patient" | "doctor" | "admin";
 export type ApiResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Data Transfer Objects (DTOs)
+// Minimal, safe shapes returned by the Data Access Layer.
+// Never include sensitive fields (e.g. raw role internals).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Minimal profile info safe to pass to Client Components */
+export interface ProfileDTO {
+  id: string;
+  role: import("./database").UserRole;
+  full_name: string;
+  avatar_url: string | null;
+  is_active: boolean;
+}
+
+/** Doctor directory entry — visible to all authenticated users */
+export interface DoctorDirectoryDTO {
+  profile_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  specialty: string;
+  department: string | null;
+  bio: string | null;
+  years_of_experience: number | null;
+}
