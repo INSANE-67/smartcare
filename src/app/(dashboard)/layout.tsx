@@ -18,6 +18,7 @@ import type { ReactNode } from "react";
 const NAV_ITEMS = {
   patient: [
     { href: "/patient", label: "Dashboard", icon: "grid" },
+    { href: "/patient/relationships", label: "My Doctors", icon: "users" },
     { href: "/patient/appointments", label: "Appointments", icon: "calendar" },
     { href: "/patient/doctors", label: "Find Doctors", icon: "search" },
     { href: "/patient/records", label: "Health Records", icon: "folder" },

@@ -38,7 +38,8 @@ export type RelationshipStatus =
   | "pending"
   | "active"
   | "inactive"
-  | "revoked";
+  | "revoked"
+  | "rejected";
 
 export type InitiatorRole = "doctor" | "patient";
 
@@ -216,19 +217,19 @@ export interface Database {
         Row: ProfileRow;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
-        Relationships: any[];
+        Relationships: unknown[];
       };
       doctors: {
         Row: DoctorRow;
         Insert: DoctorInsert;
         Update: DoctorUpdate;
-        Relationships: any[];
+        Relationships: unknown[];
       };
       doctor_patient_relationships: {
         Row: DoctorPatientRelationshipRow;
         Insert: DoctorPatientRelationshipInsert;
         Update: DoctorPatientRelationshipUpdate;
-        Relationships: any[];
+        Relationships: unknown[];
       };
     };
     Views: Record<string, never>;
