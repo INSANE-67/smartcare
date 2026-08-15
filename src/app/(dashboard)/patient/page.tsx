@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal/auth";
+import { getPatientRelationships } from "@/lib/dal/relationships";
+import { getPatientMedicalRecords } from "@/lib/dal/medical-records";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Patient Dashboard — SmartCare",
@@ -9,6 +12,16 @@ export const metadata: Metadata = {
 export default async function PatientDashboardPage() {
   // Authoritative role check — redirects non-patients to their correct dashboard
   const user = await requireRole("patient");
+
+  // Fetch dashboard data in parallel
+  const [relationships, medicalRecords] = await Promise.all([
+    getPatientRelationships(),
+    getPatientMedicalRecords(),
+  ]);
+
+  const activeDoctorsCount = relationships.filter((r) => r.status === "active").length;
+  const pendingRequestsCount = relationships.filter((r) => r.status === "pending").length;
+  const recordsCount = medicalRecords.length;
 
   return (
     <div className="dash-content">
@@ -44,8 +57,13 @@ export default async function PatientDashboardPage() {
             </svg>
           </div>
           <p className="dash-stat-label">My Doctors</p>
-          <p className="dash-stat-value">—</p>
-          <p className="dash-stat-hint">No active relationships yet</p>
+          <p className="dash-stat-value">{activeDoctorsCount}</p>
+          <p className="dash-stat-hint">
+            {pendingRequestsCount > 0 ? `${pendingRequestsCount} pending requests` : (activeDoctorsCount === 0 ? "No active relationships yet" : "Active relationships")}
+          </p>
+          <Link href="/patient/relationships" className="text-xs text-blue-600 dark:text-blue-400 mt-2 inline-block font-medium hover:underline">
+            Manage relationships &rarr;
+          </Link>
         </div>
 
         <div className="dash-stat-card">
@@ -56,8 +74,13 @@ export default async function PatientDashboardPage() {
             </svg>
           </div>
           <p className="dash-stat-label">Health Records</p>
-          <p className="dash-stat-value">—</p>
-          <p className="dash-stat-hint">No records uploaded yet</p>
+          <p className="dash-stat-value">{recordsCount}</p>
+          <p className="dash-stat-hint">
+            {recordsCount === 0 ? "No records uploaded yet" : "Total medical records"}
+          </p>
+          <Link href="/patient/records" className="text-xs text-blue-600 dark:text-blue-400 mt-2 inline-block font-medium hover:underline">
+            View records &rarr;
+          </Link>
         </div>
 
         <div className="dash-stat-card">
@@ -77,7 +100,7 @@ export default async function PatientDashboardPage() {
         <div className="dash-coming-soon-icon" aria-hidden="true">✦</div>
         <p className="dash-coming-soon-title">More features coming in Phase 2</p>
         <p className="dash-coming-soon-body">
-          Appointment booking, AI health assistant, doctor search, and health record management
+          Appointment booking, AI health assistant, and secure messaging
           will be available in upcoming releases.
         </p>
       </div>

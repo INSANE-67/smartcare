@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal/auth";
+import { getDoctorRelationships } from "@/lib/dal/relationships";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Doctor Dashboard — SmartCare",
@@ -8,6 +10,11 @@ export const metadata: Metadata = {
 
 export default async function DoctorDashboardPage() {
   const user = await requireRole("doctor");
+
+  const relationships = await getDoctorRelationships();
+
+  const activePatientsCount = relationships.filter((r) => r.status === "active").length;
+  const pendingRequestsCount = relationships.filter((r) => r.status === "pending").length;
 
   return (
     <div className="dash-content">
@@ -30,8 +37,13 @@ export default async function DoctorDashboardPage() {
             </svg>
           </div>
           <p className="dash-stat-label">Active Patients</p>
-          <p className="dash-stat-value">—</p>
-          <p className="dash-stat-hint">No active relationships</p>
+          <p className="dash-stat-value">{activePatientsCount}</p>
+          <p className="dash-stat-hint">
+            {activePatientsCount === 0 ? "No active relationships" : "Total active patients"}
+          </p>
+          <Link href="/doctor/patients" className="text-xs text-blue-600 dark:text-blue-400 mt-2 inline-block font-medium hover:underline">
+            View patients &rarr;
+          </Link>
         </div>
 
         <div className="dash-stat-card">
@@ -42,8 +54,13 @@ export default async function DoctorDashboardPage() {
             </svg>
           </div>
           <p className="dash-stat-label">Pending Requests</p>
-          <p className="dash-stat-value">—</p>
-          <p className="dash-stat-hint">No pending approvals</p>
+          <p className="dash-stat-value">{pendingRequestsCount}</p>
+          <p className="dash-stat-hint">
+            {pendingRequestsCount === 0 ? "No pending approvals" : "Action required"}
+          </p>
+          <Link href="/doctor/patients" className="text-xs text-blue-600 dark:text-blue-400 mt-2 inline-block font-medium hover:underline">
+            Review requests &rarr;
+          </Link>
         </div>
 
         <div className="dash-stat-card">
@@ -74,7 +91,7 @@ export default async function DoctorDashboardPage() {
         <div className="dash-coming-soon-icon" aria-hidden="true">✦</div>
         <p className="dash-coming-soon-title">Clinical features arriving in Phase 2</p>
         <p className="dash-coming-soon-body">
-          Patient management, appointment scheduling, secure messaging, and AI clinical
+          Appointment scheduling, secure messaging, and AI clinical
           assistance will be available in upcoming releases.
         </p>
       </div>

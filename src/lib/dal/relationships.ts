@@ -274,3 +274,24 @@ export async function getPatientRelationships(
     })
   );
 }
+
+/**
+ * Checks if there is an active relationship between the authenticated user
+ * (acting as doctor) and the specified patient.
+ */
+export async function checkActiveRelationship(patientId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data, error } = await supabase
+    .from("doctor_patient_relationships")
+    .select("id")
+    .eq("doctor_id", user.id)
+    .eq("patient_id", patientId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return true;
+}

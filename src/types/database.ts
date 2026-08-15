@@ -43,6 +43,11 @@ export type RelationshipStatus =
 
 export type InitiatorRole = "doctor" | "patient";
 
+/**
+ * Record types for medical records (Phase 2 Step 3)
+ */
+export type RecordType = "clinical_note" | "lab_result" | "prescription" | "imaging" | "other";
+
 // Deferred with patient_profiles (Phase 3) — kept here for future use
 export type BloodType =
   | "A+"
@@ -172,6 +177,31 @@ export interface DoctorPatientRelationshipInsert {
 export type DoctorPatientRelationshipUpdate = Partial<DoctorPatientRelationshipRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Table: medical_records (Phase 2 Step 3)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface MedicalRecordRow {
+  id: string;
+  patient_id: string;
+  doctor_id: string | null;
+  title: string;
+  description: string | null;
+  type: RecordType;
+  attachment_url: string | null;
+  record_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MedicalRecordInsert = Omit<MedicalRecordRow, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type MedicalRecordUpdate = Partial<MedicalRecordRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Deferred placeholder types  (patient_profiles, audit_logs — Phase 3)
 // Not wired into the Database generic yet.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -229,6 +259,12 @@ export interface Database {
         Row: DoctorPatientRelationshipRow;
         Insert: DoctorPatientRelationshipInsert;
         Update: DoctorPatientRelationshipUpdate;
+        Relationships: unknown[];
+      };
+      medical_records: {
+        Row: MedicalRecordRow;
+        Insert: MedicalRecordInsert;
+        Update: MedicalRecordUpdate;
         Relationships: unknown[];
       };
     };
