@@ -105,7 +105,7 @@ export async function loginAction(
     .from("profiles")
     .select("role, is_active")
     .eq("id", user.id)
-    .single() as { data: { role: string; is_active: boolean } | null; error: any };
+    .single() as { data: { role: import("@/types").UserRole; is_active: boolean } | null; error: unknown };
 
   if (profileError || !profile) {
     return { error: "Profile not found. Please contact support." };
@@ -120,7 +120,7 @@ export async function loginAction(
   revalidatePath("/", "layout");
 
   // Redirect to role-specific dashboard
-  redirect(getDashboardPath(profile.role as any));
+  redirect(getDashboardPath(profile.role));
 }
 
 // ─── signupAction ─────────────────────────────────────────────────────────────

@@ -84,7 +84,8 @@ export interface ProfileInsert {
   is_active?: boolean;
 }
 
-export type ProfileUpdate = Partial<Omit<ProfileInsert, "id" | "role">>;
+/** Supabase strictly typed Update requires Partial of the Row */
+export type ProfileUpdate = Partial<ProfileRow>;
 // role is excluded: role changes require the admin service-role client
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,10 +123,8 @@ export interface DoctorInsert {
   verified_at?: string | null;
 }
 
-/** Doctors may update own non-verification fields only */
-export type DoctorUpdate = Partial<
-  Pick<DoctorRow, "specialty" | "department" | "years_of_experience" | "bio">
->;
+/** Supabase strictly typed Update requires Partial of the Row */
+export type DoctorUpdate = Partial<DoctorRow>;
 
 /** Admin-only update shape — used with service-role client */
 export type DoctorAdminUpdate = Partial<
@@ -168,13 +167,8 @@ export interface DoctorPatientRelationshipInsert {
   notes?: string | null;
 }
 
-export type DoctorPatientRelationshipUpdate = Partial<
-  Pick<
-    DoctorPatientRelationshipRow,
-    "status" | "revoked_by" | "notes"
-    // established_at and revoked_at are set by trigger, not by app code
-  >
->;
+/** Supabase strictly typed Update requires Partial of the Row */
+export type DoctorPatientRelationshipUpdate = Partial<DoctorPatientRelationshipRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Deferred placeholder types  (patient_profiles, audit_logs — Phase 3)
@@ -222,16 +216,19 @@ export interface Database {
         Row: ProfileRow;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
+        Relationships: any[];
       };
       doctors: {
         Row: DoctorRow;
         Insert: DoctorInsert;
         Update: DoctorUpdate;
+        Relationships: any[];
       };
       doctor_patient_relationships: {
         Row: DoctorPatientRelationshipRow;
         Insert: DoctorPatientRelationshipInsert;
         Update: DoctorPatientRelationshipUpdate;
+        Relationships: any[];
       };
     };
     Views: Record<string, never>;
