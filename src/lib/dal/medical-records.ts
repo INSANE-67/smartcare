@@ -46,3 +46,78 @@ export async function getDoctorAccessibleRecords(patientId: string): Promise<Med
   if (error || !data) return [];
   return data;
 }
+
+export async function getMedicalRecord(id: string): Promise<MedicalRecordRow | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("medical_records")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) return null;
+  return data;
+}
+
+export async function createMedicalRecord(record: {
+  patient_id: string;
+  doctor_id?: string;
+  title: string;
+  description?: string;
+  type: string;
+  record_date: string;
+}): Promise<MedicalRecordRow> {
+  const supabase = await createSupabaseServerClient();
+  
+  // RLS will ensure that the current user has permission to insert
+  const { data, error } = await supabase
+    .from("medical_records")
+    .insert(record as never)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message || "Failed to create medical record.");
+  }
+  return data;
+}
+
+export async function updateMedicalRecord(
+  id: string,
+  updates: {
+    title?: string;
+    description?: string;
+    type?: string;
+    record_date?: string;
+  }
+): Promise<MedicalRecordRow> {
+  const supabase = await createSupabaseServerClient();
+  
+  // RLS will ensure that the current user has permission to update this record
+  const { data, error } = await supabase
+    .from("medical_records")
+    .update(updates as never)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message || "Failed to update medical record.");
+  }
+  return data;
+}
+
+export async function deleteMedicalRecord(id: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  
+  // RLS will ensure that the current user has permission to delete this record
+  // (Only patients should be able to delete their own records based on RLS)
+  const { error } = await supabase
+    .from("medical_records")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message || "Failed to delete medical record.");
+  }
+}

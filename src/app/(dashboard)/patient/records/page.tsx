@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal/auth";
 import { getPatientMedicalRecords } from "@/lib/dal/medical-records";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "My Medical Records — SmartCare",
@@ -27,6 +28,11 @@ export default async function PatientRecordsPage() {
             View your clinical notes, lab results, and prescriptions.
           </p>
         </div>
+        <div className="dash-page-actions">
+          <Link href="/patient/records/new" className="dash-btn dash-btn-primary">
+            + Add Record
+          </Link>
+        </div>
       </div>
 
       {records.length === 0 ? (
@@ -41,43 +47,35 @@ export default async function PatientRecordsPage() {
           <p className="dash-empty-state-desc">
             You don&apos;t have any medical records uploaded yet. Records added by you or your active doctors will appear here.
           </p>
+          <div className="mt-6">
+            <Link href="/patient/records/new" className="dash-btn dash-btn-primary">
+              Add Your First Record
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {records.map((record) => (
-            <div key={record.id} className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm">
-              <div className="flex justify-between items-start mb-3">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                  {formatType(record.type)}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {new Date(record.record_date).toLocaleDateString()}
-                </span>
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                {record.title}
-              </h3>
-              {record.description && (
-                <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 line-clamp-3">
-                  {record.description}
-                </p>
-              )}
-              {record.attachment_url && (
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <a
-                    href={record.attachment_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                    View Attachment
-                  </a>
+            <Link key={record.id} href={`/patient/records/${record.id}`} className="block group">
+              <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:border-blue-300 dark:hover:border-blue-700 transition-colors h-full flex flex-col">
+                <div className="flex justify-between items-start mb-3">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                    {formatType(record.type)}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {new Date(record.record_date).toLocaleDateString()}
+                  </span>
                 </div>
-              )}
-            </div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {record.title}
+                </h3>
+                {record.description && (
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 line-clamp-3 flex-grow">
+                    {record.description}
+                  </p>
+                )}
+              </div>
+            </Link>
           ))}
         </div>
       )}

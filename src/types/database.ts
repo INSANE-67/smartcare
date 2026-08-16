@@ -48,6 +48,11 @@ export type InitiatorRole = "doctor" | "patient";
  */
 export type RecordType = "clinical_note" | "lab_result" | "prescription" | "imaging" | "other";
 
+/**
+ * Appointment status (Phase 3 Step 1)
+ */
+export type AppointmentStatus = "pending" | "confirmed" | "completed" | "cancelled" | "rejected";
+
 // Deferred with patient_profiles (Phase 3) — kept here for future use
 export type BloodType =
   | "A+"
@@ -202,6 +207,32 @@ export type MedicalRecordInsert = Omit<MedicalRecordRow, "id" | "created_at" | "
 export type MedicalRecordUpdate = Partial<MedicalRecordRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Table: appointments (Phase 3 Step 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AppointmentRow {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  reason: string;
+  status: AppointmentStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type AppointmentInsert = Omit<AppointmentRow, "id" | "status" | "created_at" | "updated_at"> & {
+  id?: string;
+  status?: AppointmentStatus;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AppointmentUpdate = Partial<AppointmentRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Deferred placeholder types  (patient_profiles, audit_logs — Phase 3)
 // Not wired into the Database generic yet.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -265,7 +296,43 @@ export interface Database {
         Row: MedicalRecordRow;
         Insert: MedicalRecordInsert;
         Update: MedicalRecordUpdate;
-        Relationships: unknown[];
+        Relationships: [
+          {
+            foreignKeyName: "medical_records_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "medical_records_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      appointments: {
+        Row: AppointmentRow;
+        Insert: AppointmentInsert;
+        Update: AppointmentUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: Record<string, never>;
@@ -284,6 +351,7 @@ export interface Database {
       gender: Gender;
       relationship_status: RelationshipStatus;
       initiator_role: InitiatorRole;
+      appointment_status: AppointmentStatus;
     };
   };
 }

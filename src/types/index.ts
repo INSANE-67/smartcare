@@ -32,6 +32,8 @@ export type ApiResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
+export type ActionResponse<T> = ApiResult<T>;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Data Transfer Objects (DTOs)
 // Minimal, safe shapes returned by the Data Access Layer.
