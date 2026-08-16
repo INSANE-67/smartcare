@@ -24,6 +24,7 @@ export type {
   Database,
   PrescriptionRow,
   PrescriptionStatus,
+  ConsultationNoteRow,
 } from "./database";
 
 // ─────────────────────────────────────────────────────────────────────────────

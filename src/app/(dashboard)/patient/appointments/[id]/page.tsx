@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal/auth";
 import { getAppointmentById } from "@/lib/dal/appointments";
+import { getConsultationNoteByAppointmentId } from "@/lib/dal/consultation_notes";
 import { getPatientRelationships } from "@/lib/dal/relationships";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -25,6 +26,8 @@ export default async function PatientAppointmentDetailsPage({
   if (!appointment || appointment.patient_id !== user.id) {
     notFound();
   }
+
+  const consultationNote = await getConsultationNoteByAppointmentId(appointment.id);
 
   // Fetch doctor name
   const relationships = await getPatientRelationships();
@@ -68,14 +71,23 @@ export default async function PatientAppointmentDetailsPage({
             </div>
           </div>
           
-          {appointment.notes && (
+          {consultationNote ? (
             <div className="md:col-span-2 mt-4 pt-6 border-t border-slate-100 dark:border-slate-700">
-              <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Consultation Notes</h3>
-              <div className="text-slate-900 dark:text-slate-100 whitespace-pre-wrap mt-2 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                {appointment.notes}
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Consultation Note</h3>
+                <Link href={`/patient/appointments/${appointment.id}/consultation`} className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                  View Full Note &rarr;
+                </Link>
+              </div>
+              <div className="text-slate-900 dark:text-slate-100 mt-2 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                <p className="font-semibold mb-2">Diagnosis:</p>
+                <p className="mb-4 text-sm">{consultationNote.diagnosis}</p>
+                
+                <p className="font-semibold mb-2">Treatment Plan:</p>
+                <p className="text-sm whitespace-pre-wrap">{consultationNote.treatment_plan}</p>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

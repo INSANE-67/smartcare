@@ -266,6 +266,32 @@ export type PrescriptionInsert = Omit<PrescriptionRow, "id" | "status" | "create
 export type PrescriptionUpdate = Partial<PrescriptionRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Table: consultation_notes (Phase 3 Step 3)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ConsultationNoteRow {
+  id: string;
+  appointment_id: string;
+  patient_id: string;
+  doctor_id: string;
+  diagnosis: string;
+  symptoms: string;
+  observations: string;
+  treatment_plan: string;
+  follow_up_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ConsultationNoteInsert = Omit<ConsultationNoteRow, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ConsultationNoteUpdate = Partial<ConsultationNoteRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Deferred placeholder types  (patient_profiles, audit_logs — Phase 3)
 // Not wired into the Database generic yet.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -381,6 +407,34 @@ export interface Database {
           },
           {
             foreignKeyName: "prescriptions_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      consultation_notes: {
+        Row: ConsultationNoteRow;
+        Insert: ConsultationNoteInsert;
+        Update: ConsultationNoteUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "consultation_notes_appointment_id_fkey";
+            columns: ["appointment_id"];
+            isOneToOne: true;
+            referencedRelation: "appointments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "consultation_notes_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "consultation_notes_doctor_id_fkey";
             columns: ["doctor_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
