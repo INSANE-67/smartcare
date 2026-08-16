@@ -53,6 +53,11 @@ export type RecordType = "clinical_note" | "lab_result" | "prescription" | "imag
  */
 export type AppointmentStatus = "pending" | "confirmed" | "completed" | "cancelled" | "rejected";
 
+/**
+ * Prescription status (Phase 3 Step 2)
+ */
+export type PrescriptionStatus = "active" | "completed" | "discontinued";
+
 // Deferred with patient_profiles (Phase 3) — kept here for future use
 export type BloodType =
   | "A+"
@@ -233,6 +238,34 @@ export type AppointmentInsert = Omit<AppointmentRow, "id" | "status" | "created_
 export type AppointmentUpdate = Partial<AppointmentRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Table: prescriptions (Phase 3 Step 2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PrescriptionRow {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  medication_name: string;
+  dosage: string;
+  frequency: string;
+  start_date: string;
+  end_date: string | null;
+  status: PrescriptionStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PrescriptionInsert = Omit<PrescriptionRow, "id" | "status" | "created_at" | "updated_at"> & {
+  id?: string;
+  status?: PrescriptionStatus;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PrescriptionUpdate = Partial<PrescriptionRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Deferred placeholder types  (patient_profiles, audit_logs — Phase 3)
 // Not wired into the Database generic yet.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -334,6 +367,27 @@ export interface Database {
           }
         ];
       };
+      prescriptions: {
+        Row: PrescriptionRow;
+        Insert: PrescriptionInsert;
+        Update: PrescriptionUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "prescriptions_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prescriptions_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -352,6 +406,7 @@ export interface Database {
       relationship_status: RelationshipStatus;
       initiator_role: InitiatorRole;
       appointment_status: AppointmentStatus;
+      prescription_status: PrescriptionStatus;
     };
   };
 }

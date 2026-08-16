@@ -22,6 +22,8 @@ export type {
   PatientProfileRow,
   AuditLogRow,
   Database,
+  PrescriptionRow,
+  PrescriptionStatus,
 } from "./database";
 
 // ─────────────────────────────────────────────────────────────────────────────

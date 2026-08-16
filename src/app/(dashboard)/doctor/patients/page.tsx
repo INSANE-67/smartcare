@@ -86,13 +86,26 @@ export default async function DoctorPatientsPage({
                   {rel.status === "pending" ? (
                     <DoctorActionButtons relationshipId={rel.id} />
                   ) : (
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
-                      ${rel.status === "active" ? "bg-emerald-100 text-emerald-800" : ""}
-                      ${rel.status === "rejected" ? "bg-red-100 text-red-800" : ""}
-                      ${rel.status === "revoked" ? "bg-slate-100 text-slate-800" : ""}
-                    `}>
-                      {rel.status}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
+                        ${rel.status === "active" ? "bg-emerald-100 text-emerald-800" : ""}
+                        ${rel.status === "rejected" ? "bg-red-100 text-red-800" : ""}
+                        ${rel.status === "revoked" ? "bg-slate-100 text-slate-800" : ""}
+                      `}>
+                        {rel.status}
+                      </span>
+                      {rel.status === "active" && (
+                        <div className="flex gap-2 mt-1">
+                          <Link href={`/doctor/patients/${rel.other_party.id}/records`} className="text-xs text-primary-600 hover:text-primary-800 font-medium">
+                            Records
+                          </Link>
+                          <span className="text-slate-300">|</span>
+                          <Link href={`/doctor/patients/${rel.other_party.id}/prescriptions`} className="text-xs text-primary-600 hover:text-primary-800 font-medium">
+                            Prescriptions
+                          </Link>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </li>
