@@ -25,6 +25,12 @@ export type {
   PrescriptionRow,
   PrescriptionStatus,
   ConsultationNoteRow,
+  DoctorAvailabilityRow,
+  DoctorAvailabilityInsert,
+  DoctorAvailabilityUpdate,
+  NotificationRow,
+  NotificationInsert,
+  NotificationType,
 } from "./database";
 
 // ─────────────────────────────────────────────────────────────────────────────

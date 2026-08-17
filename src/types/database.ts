@@ -84,6 +84,7 @@ export interface ProfileRow {
   date_of_birth: string | null;
   gender: Gender | null;
   is_active: boolean;
+  notification_preferences: { email: boolean; in_app: boolean };
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +99,7 @@ export interface ProfileInsert {
   date_of_birth?: string | null;
   gender?: Gender | null;
   is_active?: boolean;
+  notification_preferences?: { email: boolean; in_app: boolean };
 }
 
 /** Supabase strictly typed Update requires Partial of the Row */
@@ -118,6 +120,10 @@ export interface DoctorRow {
   department: string | null;
   years_of_experience: number | null;
   bio: string | null;
+  is_accepting_appointments: boolean;
+  appointment_duration: number;
+  clinic_name: string | null;
+  clinic_address: string | null;
   /** Only admin can set this to true */
   is_verified: boolean;
   /** FK → profiles(id) — the admin who verified; null if admin deleted */
@@ -134,6 +140,10 @@ export interface DoctorInsert {
   department?: string | null;
   years_of_experience?: number | null;
   bio?: string | null;
+  is_accepting_appointments?: boolean;
+  appointment_duration?: number;
+  clinic_name?: string | null;
+  clinic_address?: string | null;
   is_verified?: boolean;
   verified_by?: string | null;
   verified_at?: string | null;
@@ -324,6 +334,66 @@ export interface AuditLogRow {
   user_agent: string | null;
   created_at: string;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Table: doctor_availability (Phase 3/4)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DoctorAvailabilityRow {
+  id: string;
+  doctor_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  break_start_time: string | null;
+  break_end_time: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DoctorAvailabilityInsert = Omit<DoctorAvailabilityRow, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type DoctorAvailabilityUpdate = Partial<DoctorAvailabilityRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Table: notifications (Phase 3/4)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type NotificationType = 
+  | "relationship_request_received"
+  | "relationship_request_accepted"
+  | "relationship_request_rejected"
+  | "appointment_requested"
+  | "appointment_confirmed"
+  | "appointment_cancelled"
+  | "appointment_rejected"
+  | "prescription_created"
+  | "consultation_note_added";
+
+export interface NotificationRow {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  related_entity_id: string | null;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type NotificationInsert = Omit<NotificationRow, "id" | "is_read" | "created_at" | "updated_at"> & {
+  id?: string;
+  is_read?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type NotificationUpdate = Partial<NotificationRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Database — generic type for createClient<Database>(...)

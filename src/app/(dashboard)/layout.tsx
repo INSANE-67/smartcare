@@ -22,13 +22,15 @@ const NAV_ITEMS = {
     { href: "/patient/appointments", label: "Appointments", icon: "calendar" },
     { href: "/patient/doctors", label: "Find Doctors", icon: "search" },
     { href: "/patient/records", label: "Health Records", icon: "folder" },
-    { href: "/patient/messages", label: "Messages", icon: "message" },
+    { href: "/patient/notifications", label: "Notifications", icon: "bell" },
+    { href: "/patient/settings", label: "Settings", icon: "settings" },
   ],
   doctor: [
     { href: "/doctor", label: "Dashboard", icon: "grid" },
     { href: "/doctor/patients", label: "My Patients", icon: "users" },
     { href: "/doctor/appointments", label: "Appointments", icon: "calendar" },
-    { href: "/doctor/messages", label: "Messages", icon: "message" },
+    { href: "/doctor/notifications", label: "Notifications", icon: "bell" },
+    { href: "/doctor/settings", label: "Settings", icon: "settings" },
   ],
   admin: [
     { href: "/admin", label: "Dashboard", icon: "grid" },
@@ -56,6 +58,8 @@ function NavIcon({ name }: { name: string }) {
     users: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
     check: "M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",
     link: "M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71",
+    bell: "M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0",
+    settings: "M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2zM12 15a3 3 0 100-6 3 3 0 000 6z"
   };
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"

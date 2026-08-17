@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createConsultationNote, updateConsultationNote } from "@/lib/dal/consultation_notes";
 import { getAppointmentById } from "@/lib/dal/appointments";
 import { getCurrentUser } from "@/lib/dal/auth";
+import { createNotification } from "@/lib/dal/notifications";
 import { revalidatePath } from "next/cache";
 
 const consultationNoteSchema = z.object({
@@ -70,20 +71,28 @@ export async function createConsultationNoteAction(
       };
     }
 
-    await createConsultationNote({
+    const note = await createConsultationNote({
       ...validatedFields.data,
       follow_up_date: validatedFields.data.follow_up_date ?? null,
+    });
+
+    await createNotification({
+      user_id: validatedFields.data.patient_id,
+      title: "Consultation Note Added",
+      message: `A consultation note has been added for your appointment.`,
+      type: "consultation_note_added",
+      related_entity_id: note.id,
     });
 
     revalidatePath(`/doctor/appointments/${validatedFields.data.appointment_id}`);
     revalidatePath(`/doctor/appointments/${validatedFields.data.appointment_id}/consultation`);
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create consultation note:", error);
     return {
       success: false,
-      error: error.message || "Failed to create consultation note. Please try again.",
+      error: error instanceof Error ? error.message : "Failed to create consultation note. Please try again.",
     };
   }
 }
@@ -131,11 +140,11 @@ export async function updateConsultationNoteAction(
     revalidatePath(`/doctor/appointments/${appointment_id}/consultation`);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to update consultation note:", error);
     return {
       success: false,
-      error: error.message || "Failed to update consultation note. Please try again.",
+      error: error instanceof Error ? error.message : "Failed to update consultation note. Please try again.",
     };
   }
 }

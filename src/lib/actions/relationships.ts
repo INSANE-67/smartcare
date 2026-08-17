@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createNotification } from "@/lib/dal/notifications";
 
 const RequestConnectionSchema = z.object({
   doctorId: z.string().uuid("Invalid doctor ID"),
@@ -68,6 +69,14 @@ export async function requestConnectionAction(
     return { error: "Failed to send connection request. Please try again." };
   }
 
+  await createNotification({
+    user_id: doctorId,
+    title: "New Patient Request",
+    message: "You have received a new connection request from a patient.",
+    type: "relationship_request_received",
+    related_entity_id: null,
+  });
+
   revalidatePath("/patient/doctors");
   revalidatePath("/patient/relationships");
   return { success: "Connection request sent successfully." };
@@ -109,11 +118,11 @@ export async function updateRelationshipStatusAction(
   //    doctors have SELECT access to their own relationships).
   const { data: relationshipData, error: fetchError } = await supabase
     .from("doctor_patient_relationships")
-    .select("id, doctor_id, status")
+    .select("id, doctor_id, patient_id, status")
     .eq("id", relationshipId)
     .single();
 
-  const relationship = relationshipData as unknown as { doctor_id: string; status: string };
+  const relationship = relationshipData as unknown as { doctor_id: string; patient_id: string; status: string };
 
   if (fetchError || !relationship) {
     return { error: "Relationship not found." };
@@ -143,6 +152,16 @@ export async function updateRelationshipStatusAction(
   if (updateError) {
     console.error("updateRelationshipStatusAction error:", updateError);
     return { error: "Failed to update relationship status." };
+  }
+
+  if (status === "active" || status === "rejected") {
+    await createNotification({
+      user_id: relationship.patient_id,
+      title: status === "active" ? "Connection Request Accepted" : "Connection Request Rejected",
+      message: status === "active" ? "A doctor has accepted your connection request." : "A doctor has declined your connection request.",
+      type: status === "active" ? "relationship_request_accepted" : "relationship_request_rejected",
+      related_entity_id: relationshipId,
+    });
   }
 
   revalidatePath("/doctor/patients");

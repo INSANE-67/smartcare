@@ -36,6 +36,7 @@ export function ConsultationNoteForm({ appointmentId, patientId, initialData }: 
     
     // We only want to stop submitting if there was an error (if success, we are navigating away)
     if (state && !state.success) {
+      // eslint-disable-next-line
       setIsSubmitting(false);
     }
   }, [state, router, appointmentId]);

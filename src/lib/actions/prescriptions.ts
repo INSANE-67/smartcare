@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createPrescription, updatePrescription } from "@/lib/dal/prescriptions";
 import { getDoctorRelationships } from "@/lib/dal/relationships";
+import { createNotification } from "@/lib/dal/notifications";
 import type { PrescriptionRow, PrescriptionStatus, ActionResponse } from "@/types/index";
 
 // Zod schemas for validation
@@ -68,6 +69,14 @@ export async function createPrescriptionAction(
       end_date: validatedFields.data.end_date || null,
       notes: validatedFields.data.notes || null,
       status: validatedFields.data.status as PrescriptionStatus,
+    });
+
+    await createNotification({
+      user_id: prescription.patient_id,
+      title: "New Prescription",
+      message: `You have been prescribed ${prescription.medication_name}.`,
+      type: "prescription_created",
+      related_entity_id: prescription.id,
     });
 
     revalidatePath(`/doctor/patients/${validatedFields.data.patient_id}`);

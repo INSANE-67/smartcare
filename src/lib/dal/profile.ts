@@ -101,3 +101,29 @@ export async function getAvatarSignedUrl(
 
   return data.signedUrl;
 }
+
+// ─── Profile Updates (Phase 3/4) ──────────────────────────────────────────────
+
+export async function updateProfile(userId: string, data: Partial<ProfileRow>): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update(data as never)
+    .eq("id", userId);
+
+  if (error) {
+    throw new Error(`Failed to update profile: ${error.message}`);
+  }
+}
+
+export async function updateDoctorProfile(profileId: string, data: Partial<DoctorRow>): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("doctors")
+    .update(data as never)
+    .eq("profile_id", profileId);
+
+  if (error) {
+    throw new Error(`Failed to update doctor profile: ${error.message}`);
+  }
+}

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/dal/auth";
 import { createAppointment, updateAppointment } from "@/lib/dal/appointments";
+import { createNotification } from "@/lib/dal/notifications";
 import type { ActionResponse } from "@/types";
 import type { AppointmentRow } from "@/types/database";
 
@@ -55,6 +56,14 @@ export async function bookAppointmentAction(
       notes: null,
     });
 
+    await createNotification({
+      user_id: validatedFields.data.doctor_id,
+      title: "New Appointment Request",
+      message: `A patient has requested an appointment on ${validatedFields.data.appointment_date} at ${validatedFields.data.appointment_time}.`,
+      type: "appointment_requested",
+      related_entity_id: appointment.id,
+    });
+
     revalidatePath("/patient/appointments");
     return { success: true, data: appointment };
   } catch (error: unknown) {
@@ -76,6 +85,14 @@ export async function cancelAppointmentAction(
     // Only 'pending' status should be allowed to be cancelled by patient, enforced by RLS
     const appointment = await updateAppointment(id, {
       status: "cancelled",
+    });
+
+    await createNotification({
+      user_id: appointment.doctor_id,
+      title: "Appointment Cancelled",
+      message: `An appointment on ${appointment.appointment_date} at ${appointment.appointment_time} was cancelled by the patient.`,
+      type: "appointment_cancelled",
+      related_entity_id: appointment.id,
     });
 
     revalidatePath("/patient/appointments");
@@ -100,6 +117,14 @@ export async function confirmAppointmentAction(
       status: "confirmed",
     });
 
+    await createNotification({
+      user_id: appointment.patient_id,
+      title: "Appointment Confirmed",
+      message: `Your appointment on ${appointment.appointment_date} at ${appointment.appointment_time} has been confirmed.`,
+      type: "appointment_confirmed",
+      related_entity_id: appointment.id,
+    });
+
     revalidatePath("/doctor/appointments");
     revalidatePath(`/doctor/appointments/${id}`);
     return { success: true, data: appointment };
@@ -120,6 +145,14 @@ export async function rejectAppointmentAction(
 
     const appointment = await updateAppointment(id, {
       status: "rejected",
+    });
+
+    await createNotification({
+      user_id: appointment.patient_id,
+      title: "Appointment Rejected",
+      message: `Your appointment request for ${appointment.appointment_date} at ${appointment.appointment_time} was declined.`,
+      type: "appointment_rejected",
+      related_entity_id: appointment.id,
     });
 
     revalidatePath("/doctor/appointments");
