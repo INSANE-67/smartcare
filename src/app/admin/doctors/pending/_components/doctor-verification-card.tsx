@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { approveDoctorAction, rejectDoctorAction } from "@/lib/actions/admin";
 import type { AdminPendingDoctor } from "@/lib/dal/admin";
 import { Check, X, FileText, Briefcase, MapPin, Loader2 } from "lucide-react";
@@ -18,8 +19,11 @@ export function DoctorVerificationCard({ doctor }: { doctor: AdminPendingDoctor 
     const res = await approveDoctorAction(doctor.id);
     if (!res.success) {
       setError(res.error || "Failed to approve doctor.");
-      setIsApproving(false);
+      toast.error(res.error || "Failed to approve doctor.");
+    } else {
+      toast.success("Doctor application approved successfully!");
     }
+    setIsApproving(false);
   };
 
   const handleReject = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -31,8 +35,12 @@ export function DoctorVerificationCard({ doctor }: { doctor: AdminPendingDoctor 
     const res = await rejectDoctorAction(formData);
     if (!res.success) {
       setError(res.error || "Failed to reject doctor.");
-      setIsRejecting(false);
+      toast.error(res.error || "Failed to reject doctor.");
+    } else {
+      toast.success("Doctor application has been rejected.");
+      setShowRejectForm(false);
     }
+    setIsRejecting(false);
   };
 
   return (

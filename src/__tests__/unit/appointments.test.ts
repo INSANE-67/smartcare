@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { bookAppointmentAction } from '@/lib/actions/appointments';
 import * as authDal from '@/lib/dal/auth';
@@ -31,7 +32,9 @@ describe('Appointments Server Action - bookAppointmentAction', () => {
     const result = await bookAppointmentAction(null, formData);
 
     expect(result.success).toBe(true);
-    expect(result.data).toEqual({ id: 'appt-123' });
+    if (result.success) {
+      expect(result.data).toEqual({ id: 'appt-123' });
+    }
     
     // Verify DAL calls
     expect(appointmentsDal.createAppointment).toHaveBeenCalledWith({
@@ -86,6 +89,8 @@ describe('Appointments Server Action - bookAppointmentAction', () => {
     const result = await bookAppointmentAction(null, formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Only patients can book appointments');
+    if (!result.success) {
+      expect(result.error).toContain('Only patients can book appointments');
+    }
   });
 });
