@@ -18,6 +18,7 @@ export type {
   DoctorInsert,
   DoctorUpdate,
   DoctorAdminUpdate,
+  DoctorVerificationStatus,
   DoctorPatientRelationshipRow,
   PatientProfileRow,
   AuditLogRow,

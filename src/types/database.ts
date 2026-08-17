@@ -58,6 +58,11 @@ export type AppointmentStatus = "pending" | "confirmed" | "completed" | "cancell
  */
 export type PrescriptionStatus = "active" | "completed" | "discontinued";
 
+/**
+ * Admin Verification Status (Phase 7)
+ */
+export type DoctorVerificationStatus = "pending" | "approved" | "rejected";
+
 // Deferred with patient_profiles (Phase 3) — kept here for future use
 export type BloodType =
   | "A+"
@@ -126,6 +131,10 @@ export interface DoctorRow {
   clinic_address: string | null;
   /** Only admin can set this to true */
   is_verified: boolean;
+  verification_status: DoctorVerificationStatus;
+  rejection_reason: string | null;
+  rejected_at: string | null;
+  rejected_by: string | null;
   /** FK → profiles(id) — the admin who verified; null if admin deleted */
   verified_by: string | null;
   verified_at: string | null;
@@ -145,6 +154,10 @@ export interface DoctorInsert {
   clinic_name?: string | null;
   clinic_address?: string | null;
   is_verified?: boolean;
+  verification_status?: DoctorVerificationStatus;
+  rejection_reason?: string | null;
+  rejected_at?: string | null;
+  rejected_by?: string | null;
   verified_by?: string | null;
   verified_at?: string | null;
 }
