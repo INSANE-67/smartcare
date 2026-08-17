@@ -51,9 +51,9 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
  */
 export async function createNotification(data: NotificationInsert): Promise<void> {
   const adminClient = createSupabaseAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await adminClient
     .from("notifications")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .insert(data as any);
 
   if (error) {

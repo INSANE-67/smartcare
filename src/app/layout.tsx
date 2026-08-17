@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "AI-Powered Healthcare Management & Patient Assistance Platform",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
