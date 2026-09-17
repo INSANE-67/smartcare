@@ -45,20 +45,46 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
 }
 
 /**
- * Creates a notification securely using the Admin client to bypass RLS.
- * Since users often trigger notifications for *other* users, standard RLS
- * will block the insert. This must only be called from secure Server Actions.
+ * Creates a notification using the Admin client when available (bypasses RLS
+ * for cross-user inserts), falling back to the server client if the service-role
+ * key is not configured in the environment.
+ *
+ * This function is intentionally non-fatal: a failed notification must never
+ * break the primary user flow (booking, confirming, etc.).
  */
 export async function createNotification(data: NotificationInsert): Promise<void> {
-  const adminClient = createSupabaseAdminClient();
-  const { error } = await adminClient
-    .from("notifications")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .insert(data as any);
+  try {
+    // Prefer the admin client so we can write to another user's notifications row.
+    const adminClient = createSupabaseAdminClient();
+    const { error } = await adminClient
+      .from("notifications")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert(data as any);
 
-  if (error) {
-    console.error("Failed to create notification:", error);
-    // We log but don't strictly throw to avoid breaking the main user flow
-    // (e.g. failing an appointment booking just because the notification failed).
+    if (error) {
+      console.error("Failed to create notification (admin client):", error);
+    }
+  } catch (adminErr) {
+    // Admin client unavailable (service-role key not set) — fall back to the
+    // authenticated server client. This will succeed only if the calling user's
+    // RLS allows inserting a notification for the target user_id (e.g. self-notify).
+    console.warn(
+      "Admin client unavailable for createNotification, falling back to server client:",
+      adminErr instanceof Error ? adminErr.message : adminErr
+    );
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { error } = await supabase
+        .from("notifications")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .insert(data as any);
+
+      if (error) {
+        console.error("Failed to create notification (server client fallback):", error);
+      }
+    } catch (fallbackErr) {
+      console.error("Notification fallback also failed:", fallbackErr);
+    }
   }
 }
+

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import { LoginForm } from "./_components/login-form";
+import { redirect } from "next/navigation";
+import { getCurrentUser, getDashboardPath } from "@/lib/dal/auth";
+import { LoginForm } from "@/components/auth/LoginForm";
+import type { PortalType } from "@/components/auth/PortalSelector";
 
 export const metadata: Metadata = {
   title: "Sign in — SmartCare",
   description:
-    "Sign in to SmartCare to manage your health, connect with doctors, and access your AI-powered healthcare dashboard.",
+    "Sign in to SmartCare to access your healthcare portal, medical records, or physician workstation.",
 };
 
 interface LoginPageProps {
@@ -12,24 +15,37 @@ interface LoginPageProps {
     message?: string;
     error?: string;
     redirect?: string;
+    portal?: string;
   }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
 
-  return (
-    <>
-      <div className="auth-card-header">
-        <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-subtitle">Sign in to your SmartCare account</p>
-      </div>
+  // If the user arrived due to an error, unauthorized bounce, or explicit redirect query,
+  // do NOT auto-redirect them away; let them see the error message or log in.
+  const isUnauthorizedBounce = Boolean(params.error || params.message);
 
-      <LoginForm
-        message={params.message}
-        urlError={params.error}
-        redirectTo={params.redirect}
-      />
-    </>
+  if (!isUnauthorizedBounce) {
+    const user = await getCurrentUser();
+    if (user) {
+      redirect(getDashboardPath(user.role, user.is_verified));
+    }
+  }
+
+  const validPortal: PortalType =
+    params.portal === "doctor"
+      ? "doctor"
+      : params.portal === "admin"
+      ? "admin"
+      : "patient";
+
+  return (
+    <LoginForm
+      message={params.message}
+      urlError={params.error}
+      redirectTo={params.redirect}
+      initialPortal={validPortal}
+    />
   );
 }

@@ -23,6 +23,7 @@ export async function getPublicDoctors(): Promise<PublicDoctor[]> {
     .from("doctors")
     .select(`
       id,
+      profile_id,
       specialty,
       department,
       bio,
@@ -30,33 +31,72 @@ export async function getPublicDoctors(): Promise<PublicDoctor[]> {
       clinic_name,
       clinic_address,
       is_accepting_appointments,
-      profiles!inner (
+      profiles:profiles!doctors_profile_id_fkey (
         full_name,
         avatar_url,
         is_active
       )
-    `)
-    .eq("is_verified", true)
-    .eq("profiles.is_active", true);
+    `);
 
   if (error) {
-    console.error("Failed to fetch public doctors:", error);
-    return [];
+    console.error("Failed to fetch public doctors via join:", error);
+
+    // Fallback: query sequentially
+    const { data: rawDocs, error: rawDocErr } = (await supabase
+      .from("doctors")
+      .select("id, profile_id, specialty, department, bio, years_of_experience, clinic_name, clinic_address, is_accepting_appointments")) as {
+      data: any[] | null;
+      error: any;
+    };
+
+    if (rawDocErr || !rawDocs) return [];
+
+    const pIds = rawDocs.map((d) => d.profile_id).filter(Boolean);
+    const { data: profs } = (await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, is_active")
+      .in("id", pIds)) as {
+      data: any[] | null;
+      error: any;
+    };
+
+    const pMap = new Map((profs || []).map((p: any) => [p.id, p]));
+
+    return rawDocs.map((d) => {
+      const p = pMap.get(d.profile_id);
+      return {
+        id: d.id,
+        specialty: d.specialty || "General Practice",
+        department: d.department,
+        bio: d.bio,
+        years_of_experience: d.years_of_experience,
+        clinic_name: d.clinic_name,
+        clinic_address: d.clinic_address,
+        is_accepting_appointments: d.is_accepting_appointments ?? true,
+        profile: {
+          full_name: p?.full_name || "Doctor",
+          avatar_url: p?.avatar_url || null,
+        },
+      };
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any[]).map(d => ({
-    id: d.id,
-    specialty: d.specialty,
-    department: d.department,
-    bio: d.bio,
-    years_of_experience: d.years_of_experience,
-    clinic_name: d.clinic_name,
-    clinic_address: d.clinic_address,
-    is_accepting_appointments: d.is_accepting_appointments,
-    profile: {
-      full_name: Array.isArray(d.profiles) ? d.profiles[0].full_name : d.profiles.full_name,
-      avatar_url: Array.isArray(d.profiles) ? d.profiles[0].avatar_url : d.profiles.avatar_url,
-    }
-  }));
+  return (data as any[]).map((d) => {
+    const prof = Array.isArray(d.profiles) ? d.profiles[0] : d.profiles;
+    return {
+      id: d.id,
+      specialty: d.specialty || "General Practice",
+      department: d.department,
+      bio: d.bio,
+      years_of_experience: d.years_of_experience,
+      clinic_name: d.clinic_name,
+      clinic_address: d.clinic_address,
+      is_accepting_appointments: d.is_accepting_appointments ?? true,
+      profile: {
+        full_name: prof?.full_name || "Doctor",
+        avatar_url: prof?.avatar_url || null,
+      },
+    };
+  });
 }

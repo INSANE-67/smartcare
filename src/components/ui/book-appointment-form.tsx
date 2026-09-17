@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { bookAppointmentAction } from "@/lib/actions/appointments";
 import { useRouter } from "next/navigation";
+import { AlertCircle, CalendarPlus } from "lucide-react";
 
 type DoctorOption = {
   id: string;
@@ -17,38 +18,40 @@ export function BookAppointmentForm({ doctors }: BookAppointmentFormProps) {
   const router = useRouter();
   const [state, formAction, isPending] = useActionState(bookAppointmentAction, null);
 
-  if (state?.success) {
-    router.push("/patient/appointments");
-  }
+  useEffect(() => {
+    if (state?.success) {
+      router.push("/patient/appointments?booked=true");
+    }
+  }, [state, router]);
 
-  // Get tomorrow's date for the minimum selectable date
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split("T")[0];
+  // Allow today and future dates
+  const today = new Date();
+  const minDate = today.toISOString().split("T")[0];
 
   return (
     <form action={formAction} className="dash-form">
       {state && !state.success && state.error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 rounded-md mb-4">
-          {state.error}
+        <div className="p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900 rounded-md flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-600" />
+          <span>{state.error}</span>
         </div>
       )}
 
       {doctors.length === 0 ? (
-        <div className="p-4 text-sm text-amber-800 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-300 rounded-md">
-          You need an active relationship with a doctor before you can book an appointment.
+        <div className="p-4 text-xs text-amber-800 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded-md">
+          No verified physicians available at this moment. Please check the physician directory.
         </div>
       ) : (
         <>
           <div className="dash-form-group">
-            <label htmlFor="doctor_id" className="dash-form-label">Select Doctor</label>
+            <label htmlFor="doctor_id" className="form-label text-xs">Attending Physician</label>
             <select
               id="doctor_id"
               name="doctor_id"
-              className="dash-input"
+              className="form-select text-xs"
               required
             >
-              <option value="">-- Choose a Doctor --</option>
+              <option value="">-- Choose a Verified Specialist --</option>
               {doctors.map(doctor => (
                 <option key={doctor.id} value={doctor.id}>
                   {doctor.name}
@@ -56,73 +59,75 @@ export function BookAppointmentForm({ doctors }: BookAppointmentFormProps) {
               ))}
             </select>
             {state?.fieldErrors?.doctor_id && (
-              <p className="dash-form-error">{state.fieldErrors.doctor_id[0]}</p>
+              <p className="form-error">{state.fieldErrors.doctor_id[0]}</p>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="dash-form-group">
-              <label htmlFor="appointment_date" className="dash-form-label">Date</label>
+              <label htmlFor="appointment_date" className="form-label text-xs">Consultation Date</label>
               <input
                 type="date"
                 id="appointment_date"
                 name="appointment_date"
-                className="dash-input"
+                className="form-input text-xs"
                 min={minDate}
                 required
               />
               {state?.fieldErrors?.appointment_date && (
-                <p className="dash-form-error">{state.fieldErrors.appointment_date[0]}</p>
+                <p className="form-error">{state.fieldErrors.appointment_date[0]}</p>
               )}
             </div>
 
             <div className="dash-form-group">
-              <label htmlFor="appointment_time" className="dash-form-label">Time</label>
+              <label htmlFor="appointment_time" className="form-label text-xs">Preferred Time Slot</label>
               <input
                 type="time"
                 id="appointment_time"
                 name="appointment_time"
-                className="dash-input"
-                min="09:00"
-                max="17:00"
+                className="form-input text-xs"
+                min="08:00"
+                max="18:00"
+                defaultValue="09:00"
                 required
               />
-              <p className="text-xs text-slate-500 mt-1">Available 09:00 AM to 05:00 PM</p>
+              <span className="text-[10px] text-slate-500 mt-0.5">Clinic hours: 08:00 AM – 06:00 PM</span>
               {state?.fieldErrors?.appointment_time && (
-                <p className="dash-form-error">{state.fieldErrors.appointment_time[0]}</p>
+                <p className="form-error">{state.fieldErrors.appointment_time[0]}</p>
               )}
             </div>
           </div>
 
           <div className="dash-form-group">
-            <label htmlFor="reason" className="dash-form-label">Reason for Visit</label>
+            <label htmlFor="reason" className="form-label text-xs">Reason for Visit / Symptoms</label>
             <textarea
               id="reason"
               name="reason"
-              className="dash-input min-h-[100px]"
-              placeholder="Please briefly describe your symptoms or reason for this appointment..."
+              className="form-textarea min-h-[90px] text-xs"
+              placeholder="Describe current symptoms, reason for consultation, or existing treatment questions..."
               required
             />
             {state?.fieldErrors?.reason && (
-              <p className="dash-form-error">{state.fieldErrors.reason[0]}</p>
+              <p className="form-error">{state.fieldErrors.reason[0]}</p>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800 mt-4">
             <button
               type="button"
               onClick={() => router.push("/patient/appointments")}
-              className="dash-btn dash-btn-secondary"
+              className="btn btn-secondary text-xs"
               disabled={isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="dash-btn dash-btn-primary"
+              className="btn btn-primary text-xs"
               disabled={isPending}
             >
-              {isPending ? "Booking..." : "Request Appointment"}
+              <CalendarPlus className="w-3.5 h-3.5" />
+              <span>{isPending ? "Submitting Request..." : "Request Appointment"}</span>
             </button>
           </div>
         </>

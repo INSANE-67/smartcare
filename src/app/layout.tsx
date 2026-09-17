@@ -1,32 +1,34 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Playfair_Display, Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
+  variable: "--font-serif",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "SmartCare",
+  title: "SmartCare — Modern Healthcare Platform",
   description:
-    "AI-Powered Healthcare Management & Patient Assistance Platform",
+    "A unified, modern healthcare platform connecting patients and physicians with real-time electronic health records, smart scheduling, and clinical coordination.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="antialiased min-h-screen flex flex-col relative bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-50">
-        <Toaster position="bottom-right" richColors theme="system" />
+      <body className="antialiased min-h-screen flex flex-col relative bg-[#FAF7F2] text-[#111111] font-sans">
+        <Toaster position="bottom-right" richColors theme="light" />
         {children}
       </body>
     </html>

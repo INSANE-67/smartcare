@@ -78,7 +78,7 @@ export type BloodType =
 // Table: profiles
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface ProfileRow {
+export type ProfileRow = {
   /** UUID — equals auth.users.id (1:1) */
   id: string;
   role: UserRole;
@@ -92,9 +92,9 @@ export interface ProfileRow {
   notification_preferences: { email: boolean; in_app: boolean };
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface ProfileInsert {
+export type ProfileInsert = {
   /** Must equal the auth.users.id — assigned by Supabase Auth, not generated */
   id: string;
   role?: UserRole;
@@ -105,7 +105,7 @@ export interface ProfileInsert {
   gender?: Gender | null;
   is_active?: boolean;
   notification_preferences?: { email: boolean; in_app: boolean };
-}
+};
 
 /** Supabase strictly typed Update requires Partial of the Row */
 export type ProfileUpdate = Partial<ProfileRow>;
@@ -115,7 +115,7 @@ export type ProfileUpdate = Partial<ProfileRow>;
 // Table: doctors  (was "doctor_profiles" — renamed to match real table)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface DoctorRow {
+export type DoctorRow = {
   /** Generated UUID */
   id: string;
   /** FK → profiles(id) — the doctor's profile */
@@ -140,9 +140,9 @@ export interface DoctorRow {
   verified_at: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface DoctorInsert {
+export type DoctorInsert = {
   profile_id: string;
   license_number: string;
   specialty: string;
@@ -160,7 +160,7 @@ export interface DoctorInsert {
   rejected_by?: string | null;
   verified_by?: string | null;
   verified_at?: string | null;
-}
+};
 
 /** Supabase strictly typed Update requires Partial of the Row */
 export type DoctorUpdate = Partial<DoctorRow>;
@@ -174,7 +174,7 @@ export type DoctorAdminUpdate = Partial<
 // Table: doctor_patient_relationships
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface DoctorPatientRelationshipRow {
+export type DoctorPatientRelationshipRow = {
   /** Generated UUID */
   id: string;
   /** FK → profiles(id); role must be 'doctor' */
@@ -194,9 +194,9 @@ export interface DoctorPatientRelationshipRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface DoctorPatientRelationshipInsert {
+export type DoctorPatientRelationshipInsert = {
   doctor_id: string;
   patient_id: string;
   /** Always 'pending' on insert — enforced by RLS WITH CHECK */
@@ -204,7 +204,7 @@ export interface DoctorPatientRelationshipInsert {
   initiated_by: string;
   initiator_role: InitiatorRole;
   notes?: string | null;
-}
+};
 
 /** Supabase strictly typed Update requires Partial of the Row */
 export type DoctorPatientRelationshipUpdate = Partial<DoctorPatientRelationshipRow>;
@@ -213,7 +213,7 @@ export type DoctorPatientRelationshipUpdate = Partial<DoctorPatientRelationshipR
 // Table: medical_records (Phase 2 Step 3)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface MedicalRecordRow {
+export type MedicalRecordRow = {
   id: string;
   patient_id: string;
   doctor_id: string | null;
@@ -224,7 +224,7 @@ export interface MedicalRecordRow {
   record_date: string;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type MedicalRecordInsert = Omit<MedicalRecordRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
@@ -238,7 +238,7 @@ export type MedicalRecordUpdate = Partial<MedicalRecordRow>;
 // Table: appointments (Phase 3 Step 1)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface AppointmentRow {
+export type AppointmentRow = {
   id: string;
   patient_id: string;
   doctor_id: string;
@@ -249,7 +249,7 @@ export interface AppointmentRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type AppointmentInsert = Omit<AppointmentRow, "id" | "status" | "created_at" | "updated_at"> & {
   id?: string;
@@ -264,7 +264,7 @@ export type AppointmentUpdate = Partial<AppointmentRow>;
 // Table: prescriptions (Phase 3 Step 2)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface PrescriptionRow {
+export type PrescriptionRow = {
   id: string;
   patient_id: string;
   doctor_id: string;
@@ -277,7 +277,7 @@ export interface PrescriptionRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type PrescriptionInsert = Omit<PrescriptionRow, "id" | "status" | "created_at" | "updated_at"> & {
   id?: string;
@@ -292,7 +292,7 @@ export type PrescriptionUpdate = Partial<PrescriptionRow>;
 // Table: consultation_notes (Phase 3 Step 3)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface ConsultationNoteRow {
+export type ConsultationNoteRow = {
   id: string;
   appointment_id: string;
   patient_id: string;
@@ -304,7 +304,7 @@ export interface ConsultationNoteRow {
   follow_up_date: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type ConsultationNoteInsert = Omit<ConsultationNoteRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
@@ -320,7 +320,7 @@ export type ConsultationNoteUpdate = Partial<ConsultationNoteRow>;
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** @deferred Phase 3 — patient_profiles table */
-export interface PatientProfileRow {
+export type PatientProfileRow = {
   id: string;
   profile_id: string;
   blood_type: BloodType | null;
@@ -331,10 +331,10 @@ export interface PatientProfileRow {
   insurance_policy_number: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 /** @deferred Phase 3 — audit_logs table */
-export interface AuditLogRow {
+export type AuditLogRow = {
   id: string;
   actor_id: string | null;
   action: string;
@@ -346,13 +346,13 @@ export interface AuditLogRow {
   ip_address: string | null;
   user_agent: string | null;
   created_at: string;
-}
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Table: doctor_availability (Phase 3/4)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface DoctorAvailabilityRow {
+export type DoctorAvailabilityRow = {
   id: string;
   doctor_id: string;
   day_of_week: number;
@@ -362,7 +362,7 @@ export interface DoctorAvailabilityRow {
   break_end_time: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type DoctorAvailabilityInsert = Omit<DoctorAvailabilityRow, "id" | "created_at" | "updated_at"> & {
   id?: string;
@@ -387,7 +387,7 @@ export type NotificationType =
   | "prescription_created"
   | "consultation_note_added";
 
-export interface NotificationRow {
+export type NotificationRow = {
   id: string;
   user_id: string;
   title: string;
@@ -397,7 +397,7 @@ export interface NotificationRow {
   is_read: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
 export type NotificationInsert = Omit<NotificationRow, "id" | "is_read" | "created_at" | "updated_at"> & {
   id?: string;
@@ -409,30 +409,136 @@ export type NotificationInsert = Omit<NotificationRow, "id" | "is_read" | "creat
 export type NotificationUpdate = Partial<NotificationRow>;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Database — generic type for createClient<Database>(...)
-// Reflects only the tables that exist in the current schema (Phase 1 Step 2).
+// Table: conversations (Phase 4 AI Chat)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface Database {
+export type ConversationRow = {
+  id: string;
+  patient_id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ConversationInsert = Omit<ConversationRow, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ConversationUpdate = Partial<ConversationRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Table: messages (Phase 4 AI Chat)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type MessageRole = "user" | "assistant" | "system" | "data";
+
+export type MessageRow = {
+  id: string;
+  conversation_id: string;
+  role: MessageRole;
+  content: string;
+  created_at: string;
+};
+
+export type MessageInsert = Omit<MessageRow, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type MessageUpdate = Partial<MessageRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Table: ai_usage_logs (Phase 4 AI Chat)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AiUsageLogRow = {
+  id: string;
+  patient_id: string;
+  conversation_id: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  created_at: string;
+};
+
+export type AiUsageLogInsert = Omit<AiUsageLogRow, "id" | "created_at"> & {
+  id?: string;
+  created_at?: string;
+};
+
+export type AiUsageLogUpdate = Partial<AiUsageLogRow>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Database — generic type for createClient<Database>(...)
+// Reflects only the tables that exist in the current schema.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type Database = {
   public: {
     Tables: {
       profiles: {
         Row: ProfileRow;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
-        Relationships: unknown[];
+        Relationships: [];
       };
       doctors: {
         Row: DoctorRow;
         Insert: DoctorInsert;
         Update: DoctorUpdate;
-        Relationships: unknown[];
+        Relationships: [
+          {
+            foreignKeyName: "doctors_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "doctors_verified_by_fkey";
+            columns: ["verified_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       doctor_patient_relationships: {
         Row: DoctorPatientRelationshipRow;
         Insert: DoctorPatientRelationshipInsert;
         Update: DoctorPatientRelationshipUpdate;
-        Relationships: unknown[];
+        Relationships: [
+          {
+            foreignKeyName: "doctor_patient_relationships_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "doctor_patient_relationships_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "doctor_patient_relationships_initiated_by_fkey";
+            columns: ["initiated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "doctor_patient_relationships_revoked_by_fkey";
+            columns: ["revoked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       medical_records: {
         Row: MedicalRecordRow;
@@ -525,6 +631,83 @@ export interface Database {
           }
         ];
       };
+      doctor_availability: {
+        Row: DoctorAvailabilityRow;
+        Insert: DoctorAvailabilityInsert;
+        Update: DoctorAvailabilityUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "doctor_availability_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      notifications: {
+        Row: NotificationRow;
+        Insert: NotificationInsert;
+        Update: NotificationUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      conversations: {
+        Row: ConversationRow;
+        Insert: ConversationInsert;
+        Update: ConversationUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "conversations_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      messages: {
+        Row: MessageRow;
+        Insert: MessageInsert;
+        Update: MessageUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      ai_usage_logs: {
+        Row: AiUsageLogRow;
+        Insert: AiUsageLogInsert;
+        Update: AiUsageLogUpdate;
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_logs_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_usage_logs_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -544,6 +727,9 @@ export interface Database {
       initiator_role: InitiatorRole;
       appointment_status: AppointmentStatus;
       prescription_status: PrescriptionStatus;
+      doctor_verification_status: DoctorVerificationStatus;
+      notification_type: NotificationType;
+      record_type: RecordType;
     };
   };
-}
+};

@@ -3,47 +3,58 @@ import { Activity } from "lucide-react";
 
 export function MarketingFooter() {
   return (
-    <footer className="bg-slate-50 border-t border-gray-200 py-12">
-      <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="col-span-1 md:col-span-1">
-          <Link href="/" className="flex items-center gap-2 mb-4">
-            <Activity className="h-6 w-6 text-blue-600" />
-            <span className="font-bold text-xl tracking-tight text-gray-900">SmartCare</span>
-          </Link>
-          <p className="text-sm text-gray-500">
-            AI-powered healthcare management, making visits easier and smarter for both patients and doctors.
-          </p>
-        </div>
-        
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-4">Platform</h3>
-          <ul className="space-y-2">
-            <li><Link href="/features" className="text-sm text-gray-600 hover:text-blue-600">Features</Link></li>
-            <li><Link href="/doctors" className="text-sm text-gray-600 hover:text-blue-600">Our Doctors</Link></li>
-            <li><Link href="/about" className="text-sm text-gray-600 hover:text-blue-600">About Us</Link></li>
-          </ul>
+    <footer className="bg-[#FAF7F2] border-t border-[#E8DED2] pt-16 pb-12 mt-auto">
+      <div className="container mx-auto px-6 max-w-7xl">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-12 border-b border-[#E8DED2]">
+          {/* Logo & Platform Summary */}
+          <div className="space-y-3 max-w-sm">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#111111] text-white flex items-center justify-center shadow-xs">
+                <Activity className="w-4 h-4" />
+              </div>
+              <span className="font-serif text-xl font-bold tracking-tight text-[#111111]">
+                SmartCare
+              </span>
+            </Link>
+            <p className="text-xs text-[#555555] leading-relaxed">
+              A secure healthcare platform connecting patients and accredited physicians with clear electronic health records and clinical coordination.
+            </p>
+          </div>
+
+          {/* Clean Navigation Links */}
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-xs font-medium text-[#111111]">
+            <Link href="/signup" className="hover:underline underline-offset-4 transition-all">
+              Patients
+            </Link>
+            <Link href="/doctors" className="hover:underline underline-offset-4 transition-all">
+              Doctors
+            </Link>
+            <Link href="/features" className="hover:underline underline-offset-4 transition-all">
+              Features
+            </Link>
+            <Link href="/about" className="hover:underline underline-offset-4 transition-all">
+              About
+            </Link>
+            <Link href="/privacy" className="hover:underline underline-offset-4 transition-all">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:underline underline-offset-4 transition-all">
+              Terms
+            </Link>
+            <Link href="/contact" className="hover:underline underline-offset-4 transition-all">
+              Contact
+            </Link>
+          </div>
         </div>
 
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-4">Support</h3>
-          <ul className="space-y-2">
-            <li><Link href="/faq" className="text-sm text-gray-600 hover:text-blue-600">FAQ</Link></li>
-            <li><Link href="/contact" className="text-sm text-gray-600 hover:text-blue-600">Contact Us</Link></li>
-          </ul>
+        {/* Minimal Copyright */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#777777]">
+          <p>&copy; SmartCare</p>
+          <div className="flex items-center gap-2 text-[#555555] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#111111]" />
+            <span>End-to-End Encrypted Health Records</span>
+          </div>
         </div>
-
-        <div>
-          <h3 className="font-semibold text-gray-900 mb-4">Legal</h3>
-          <ul className="space-y-2">
-            <li><Link href="/privacy" className="text-sm text-gray-600 hover:text-blue-600">Privacy Policy</Link></li>
-            <li><Link href="/terms" className="text-sm text-gray-600 hover:text-blue-600">Terms of Service</Link></li>
-          </ul>
-        </div>
-      </div>
-      <div className="container mx-auto px-4 mt-12 pt-8 border-t border-gray-200">
-        <p className="text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} SmartCare. All rights reserved.
-        </p>
       </div>
     </footer>
   );

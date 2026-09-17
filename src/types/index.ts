@@ -57,6 +57,9 @@ export interface ProfileDTO {
   full_name: string;
   avatar_url: string | null;
   is_active: boolean;
+  email?: string | null;
+  is_verified?: boolean;
+  medical_license?: string | null;
 }
 
 /** Doctor directory entry — visible to all authenticated users */

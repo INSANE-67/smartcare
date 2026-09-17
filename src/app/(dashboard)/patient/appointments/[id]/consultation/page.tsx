@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal/auth";
 import { getConsultationNoteByAppointmentId } from "@/lib/dal/consultation_notes";
 import { getAppointmentById } from "@/lib/dal/appointments";
-import { getPatientRelationships } from "@/lib/dal/relationships";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -29,10 +29,20 @@ export default async function PatientConsultationNotePage({
     notFound();
   }
 
-  // Fetch doctor name
-  const relationships = await getPatientRelationships();
-  const doctorRel = relationships.find(r => r.other_party.id === appointment.doctor_id);
-  const doctorName = doctorRel?.other_party.full_name || "Unknown Doctor";
+  // Fetch doctor name directly from profile (appointment.doctor_id IS profiles.id)
+  const supabase = await createSupabaseServerClient();
+  const { data: doctorProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", appointment.doctor_id)
+    .maybeSingle();
+
+  const rawName = doctorProfile?.full_name?.trim() || "";
+  const doctorName = rawName
+    ? rawName.toLowerCase().startsWith("dr")
+      ? rawName
+      : `Dr. ${rawName}`
+    : "Doctor";
 
   return (
     <div className="dash-content max-w-4xl">

@@ -4,6 +4,7 @@ import { useTransition, useState } from "react";
 import { confirmAppointmentAction, rejectAppointmentAction, completeAppointmentAction } from "@/lib/actions/appointments";
 import { AppointmentStatus, AppointmentRow } from "@/types/database";
 import { ActionResponse } from "@/types";
+import { Check, X, FileCheck2, AlertCircle } from "lucide-react";
 
 interface UpdateAppointmentStatusFormProps {
   id: string;
@@ -31,7 +32,7 @@ export function UpdateAppointmentStatusForm({ id, status }: UpdateAppointmentSta
     setError(null);
     
     if (!notes.trim()) {
-      setError("Consultation notes are required to complete an appointment.");
+      setError("Clinical encounter notes are required to complete an appointment.");
       return;
     }
 
@@ -50,21 +51,30 @@ export function UpdateAppointmentStatusForm({ id, status }: UpdateAppointmentSta
 
   if (status === "pending") {
     return (
-      <div className="flex gap-3 items-center">
-        {error && <p className="text-red-500 text-sm mr-2">{error}</p>}
+      <div className="flex items-center gap-2">
+        {error && (
+          <div className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1 mr-2">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>{error}</span>
+          </div>
+        )}
         <button
+          type="button"
           onClick={() => handleAction(rejectAppointmentAction)}
           disabled={isPending}
-          className="dash-btn bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-900/50"
+          className="btn btn-secondary text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
         >
-          {isPending ? "Processing..." : "Reject"}
+          <X className="w-3.5 h-3.5" />
+          <span>{isPending ? "Declining..." : "Decline"}</span>
         </button>
         <button
+          type="button"
           onClick={() => handleAction(confirmAppointmentAction)}
           disabled={isPending}
-          className="dash-btn bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-900/50"
+          className="btn btn-primary text-xs"
         >
-          {isPending ? "Processing..." : "Confirm Appointment"}
+          <Check className="w-3.5 h-3.5" />
+          <span>{isPending ? "Confirming..." : "Confirm Appointment"}</span>
         </button>
       </div>
     );
@@ -73,17 +83,22 @@ export function UpdateAppointmentStatusForm({ id, status }: UpdateAppointmentSta
   if (status === "confirmed") {
     if (showNotesForm) {
       return (
-        <form onSubmit={handleComplete} className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 w-full">
-          <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-3">Complete Appointment</h4>
-          {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+        <form onSubmit={handleComplete} className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 w-full mt-3">
+          <h4 className="font-semibold text-slate-900 dark:text-white text-xs mb-2">Complete Consultation Encounter</h4>
+          {error && (
+            <div className="text-xs text-red-600 dark:text-red-400 mb-2 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>{error}</span>
+            </div>
+          )}
           <div className="dash-form-group">
-            <label htmlFor="notes" className="dash-form-label">Consultation Notes (Required)</label>
+            <label htmlFor="notes" className="form-label text-xs">Clinical Summary &amp; Treatment Plan (Required)</label>
             <textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="dash-input min-h-[100px]"
-              placeholder="Enter notes from the consultation..."
+              className="form-textarea min-h-[90px] text-xs"
+              placeholder="Enter diagnosis, summary of visit, and treatment instructions..."
               required
             />
           </div>
@@ -91,17 +106,17 @@ export function UpdateAppointmentStatusForm({ id, status }: UpdateAppointmentSta
             <button
               type="button"
               onClick={() => setShowNotesForm(false)}
-              className="dash-btn dash-btn-secondary py-1.5 px-3 text-sm"
+              className="btn btn-secondary text-xs"
               disabled={isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="dash-btn dash-btn-primary py-1.5 px-3 text-sm"
+              className="btn btn-primary text-xs"
               disabled={isPending}
             >
-              {isPending ? "Saving..." : "Save & Complete"}
+              {isPending ? "Submitting..." : "Save & Complete Encounter"}
             </button>
           </div>
         </form>
@@ -110,10 +125,12 @@ export function UpdateAppointmentStatusForm({ id, status }: UpdateAppointmentSta
 
     return (
       <button
+        type="button"
         onClick={() => setShowNotesForm(true)}
-        className="dash-btn bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-900/50"
+        className="btn btn-primary text-xs"
       >
-        Mark Completed
+        <FileCheck2 className="w-3.5 h-3.5" />
+        <span>Mark Encounter Completed</span>
       </button>
     );
   }

@@ -1,6 +1,6 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
 import type { ProfileRow, DoctorRow, UserRole } from "@/types/index";
 
 /**
@@ -14,12 +14,23 @@ export async function requireAdmin(): Promise<void> {
     throw new Error("Unauthorized");
   }
 
-  // Call the secure RPC function to get the role directly
-  const { data: role, error } = await supabase.rpc("get_user_role");
-  
-  if (error || role !== "admin") {
-    throw new Error("Forbidden: Admin access required");
+  const { data: profile } = (await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle()) as { data: { role: UserRole } | null };
+
+  if (profile?.role === "admin") {
+    return;
   }
+
+  // Fallback to get_user_role RPC
+  const { data: role } = await supabase.rpc("get_user_role");
+  if (role === "admin") {
+    return;
+  }
+
+  throw new Error("Forbidden: Admin access required");
 }
 
 export interface AdminSystemStats {

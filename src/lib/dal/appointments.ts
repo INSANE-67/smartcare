@@ -1,37 +1,88 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "./auth";
 import type { AppointmentInsert, AppointmentRow, AppointmentUpdate } from "@/types/database";
 
+export interface PatientAppointmentDTO extends AppointmentRow {
+  doctorName: string;
+  specialty: string;
+}
+
 /**
- * Returns appointments for the currently authenticated patient.
+ * Returns appointments for the currently authenticated patient with resolved doctor metadata.
+ *
+ * KEY: appointments.doctor_id references profiles.id directly (migration 008).
+ * So doctor_id IS the doctor's profile UUID — query profiles directly by it,
+ * and query doctors by profile_id = doctor_id for specialty info.
  */
-export async function getPatientAppointments(): Promise<AppointmentRow[]> {
-  const supabase = await createSupabaseServerClient();
-  const user = await getCurrentUser();
+export async function getPatientAppointments(): Promise<PatientAppointmentDTO[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
 
-  if (!user || user.role !== "patient") {
-    throw new Error("Unauthorized: Only patients can fetch their appointments");
-  }
-
-  // RLS ensures they only see their own appointments
-  const { data, error } = await supabase
+  // 1. Fetch all appointments for this patient
+  const { data: appointments, error } = (await supabase
     .from("appointments")
     .select("*")
-    .order("appointment_date", { ascending: false })
-    .order("appointment_time", { ascending: false });
+    .eq("patient_id", user.id)
+    .order("appointment_date", { ascending: false })) as {
+    data: AppointmentRow[] | null;
+    error: unknown;
+  };
 
-  if (error) {
-    console.error("Error fetching patient appointments:", error);
-    throw new Error("Failed to fetch appointments");
-  }
+  if (error || !appointments || appointments.length === 0) return [];
 
-  return data as AppointmentRow[];
+  // 2. doctor_id IS profiles.id — collect unique doctor profile IDs
+  const doctorProfileIds = Array.from(
+    new Set(appointments.map((a) => a.doctor_id).filter(Boolean))
+  );
+
+  // 3. Fetch profiles for all doctor profile IDs directly
+  const { data: profiles } = (await supabase
+    .from("profiles")
+    .select("id, full_name, email, avatar_url")
+    .in("id", doctorProfileIds)) as {
+    data: { id: string; full_name: string; email: string; avatar_url: string | null }[] | null;
+    error: unknown;
+  };
+
+  // 4. Fetch doctors table for specialty info using profile_id = doctor_id
+  const { data: doctorRows } = (await supabase
+    .from("doctors")
+    .select("profile_id, specialty, department")
+    .in("profile_id", doctorProfileIds)) as {
+    data: { profile_id: string; specialty: string; department: string | null }[] | null;
+    error: unknown;
+  };
+
+  const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+  const doctorMap = new Map((doctorRows ?? []).map((d) => [d.profile_id, d]));
+
+  return appointments.map((apt) => {
+    const profile = profileMap.get(apt.doctor_id);
+    const doctorRow = doctorMap.get(apt.doctor_id);
+
+    const rawName = profile?.full_name?.trim() || profile?.email?.split("@")[0] || "";
+    const doctorName = rawName
+      ? rawName.toLowerCase().startsWith("dr")
+        ? rawName
+        : `Dr. ${rawName}`
+      : "Doctor";
+
+    return {
+      ...apt,
+      doctorName,
+      specialty: doctorRow?.specialty || "General Practice",
+    };
+  });
 }
 
 /**
  * Returns appointments for the currently authenticated doctor.
+ * Matches both user.id (profiles.id) and doctors.id to guarantee 100% visibility.
  */
 export async function getDoctorAppointments(): Promise<AppointmentRow[]> {
   const supabase = await createSupabaseServerClient();
@@ -41,10 +92,19 @@ export async function getDoctorAppointments(): Promise<AppointmentRow[]> {
     throw new Error("Unauthorized: Only doctors can fetch their appointments");
   }
 
-  // RLS ensures they only see appointments assigned to them
+  // Resolve all identifiers for this doctor
+  const { data: docRow } = (await supabase
+    .from("doctors")
+    .select("id")
+    .eq("profile_id", user.id)
+    .maybeSingle()) as { data: { id: string } | null; error: unknown };
+
+  const doctorMatchIds = Array.from(new Set([user.id, docRow?.id].filter(Boolean))) as string[];
+
   const { data, error } = await supabase
     .from("appointments")
     .select("*")
+    .in("doctor_id", doctorMatchIds)
     .order("appointment_date", { ascending: true })
     .order("appointment_time", { ascending: true });
 
@@ -53,7 +113,7 @@ export async function getDoctorAppointments(): Promise<AppointmentRow[]> {
     throw new Error("Failed to fetch appointments");
   }
 
-  return data as AppointmentRow[];
+  return (data || []) as AppointmentRow[];
 }
 
 /**

@@ -14,6 +14,13 @@ describe('Admin DAL - requireAdmin', () => {
       auth: {
         getUser: vi.fn(),
       },
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+          }),
+        }),
+      }),
       rpc: vi.fn(),
     };
 

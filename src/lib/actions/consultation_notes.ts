@@ -128,8 +128,8 @@ export async function updateConsultationNoteAction(
       };
     }
 
-    // We omit appointment_id and patient_id as they shouldn't change
-    const { appointment_id, patient_id, ...updateData } = validatedFields.data;
+    // We omit patient_id as it shouldn't change
+    const { appointment_id, patient_id: _patient_id, ...updateData } = validatedFields.data;
 
     await updateConsultationNote(id, {
       ...updateData,

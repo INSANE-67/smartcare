@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/dal/auth";
 import { markNotificationAsRead, markAllNotificationsAsRead } from "@/lib/dal/notifications";
 
-export async function markNotificationReadAction(notificationId: string, formData?: FormData) {
+export async function markNotificationReadAction(notificationId: string, _formData?: FormData) {
   try {
     const user = await requireAuth();
     await markNotificationAsRead(notificationId, user.id);
@@ -18,7 +18,7 @@ export async function markNotificationReadAction(notificationId: string, formDat
   }
 }
 
-export async function markAllNotificationsReadAction(formData?: FormData) {
+export async function markAllNotificationsReadAction(_formData?: FormData) {
   try {
     const user = await requireAuth();
     await markAllNotificationsAsRead(user.id);

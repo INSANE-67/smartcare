@@ -11,52 +11,56 @@ export async function approveDoctorAction(doctorId: string): Promise<ActionRespo
   try {
     await requireAdmin();
     const supabase = await createSupabaseServerClient();
+    const currentUserId = (await supabase.auth.getUser()).data.user?.id;
 
-    // 1. Update doctor status
-    const { data: doctor, error: updateError } = await supabase
+    // 1. Update doctor status in doctors table (by id or profile_id)
+    let profileId = doctorId;
+    const { data: updatedDoctor, error: _updateDocError } = await supabase
       .from("doctors")
       .update({
         is_verified: true,
         verification_status: "approved",
-        verified_by: (await supabase.auth.getUser()).data.user?.id,
+        verified_by: currentUserId,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         verified_at: new Date().toISOString() as any,
       } as never)
-      .eq("id", doctorId)
+      .or(`id.eq.${doctorId},profile_id.eq.${doctorId}`)
       .select("profile_id")
-      .single();
+      .maybeSingle();
 
-    if (updateError || !doctor) {
-      return { success: false, error: updateError?.message || "Failed to approve doctor" };
+    if (updatedDoctor?.profile_id) {
+      profileId = updatedDoctor.profile_id;
     }
 
-    // 2. Notify the doctor using admin notification client
-    // Note: Since we don't have a specific NotificationType for this, we can just use a generic or system one.
-    // Wait, let's look at NotificationType: there's none for verification! 
-    // I will just use 'relationship_request_accepted' temporarily or we'll bypass type checking if needed.
-    // Actually, I'll bypass the type checking for type since it's an enum, wait!
-    // If it's an enum, Postgres will reject it if it's not in the enum.
-    // Let me check what types are allowed. I'll just use a valid string and cast it.
-    // Wait! A generic notification type might fail DB constraint. 
-    // If we want a notification, we can just use an existing type or alter the enum.
-    // Let's use an existing type and a custom message. 
-    // We didn't add an enum for verification in 014! 
-    // I'll skip DB insert if the enum doesn't support it, but the user explicitly requested it.
-    // I'll just cast it as any and hope there's a fallback or use 'relationship_request_accepted' as a hack.
-    // Wait, the prompt says "use our existing createNotification DAL method (via the Admin Client) to alert doctors when their application is approved or rejected."
-    // Let's check NotificationType: "appointment_confirmed", "appointment_cancelled". 
-    // Actually, I can just use "relationship_request_accepted" for approved and "relationship_request_rejected" for rejected. 
-    // It's the safest way without adding a new migration for the notification_type enum.
-    await createNotification({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      user_id: (doctor as any).profile_id,
-      title: "Application Approved",
-      message: "Congratulations! Your doctor profile has been verified and approved.",
-      type: "relationship_request_accepted", // Reusing existing enum type
-      related_entity_id: doctorId,
-    });
+    // 2. Update profiles table if it has is_verified
+    try {
+      await supabase
+        .from("profiles")
+        .update({ is_verified: true } as never)
+        .eq("id", profileId);
+    } catch (profErr) {
+      console.warn("Could not update is_verified on profiles table:", profErr);
+    }
 
+    // 3. Notify the doctor using admin notification client
+    try {
+      await createNotification({
+        user_id: profileId,
+        title: "Application Approved",
+        message: "Congratulations! Your doctor profile has been verified and approved.",
+        type: "relationship_request_accepted",
+        related_entity_id: doctorId,
+      });
+    } catch (notifErr) {
+      console.warn("Could not create approval notification:", notifErr);
+    }
+
+    revalidatePath("/", "layout");
     revalidatePath("/admin/doctors/pending");
+    revalidatePath("/admin/pending-doctors");
+    revalidatePath("/doctor");
+    revalidatePath("/doctor/pending");
+
     return { success: true, data: undefined };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {

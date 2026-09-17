@@ -1,118 +1,76 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal/auth";
-import { getDoctorRelationships } from "@/lib/dal/relationships";
-import { Avatar } from "@/components/ui/avatar";
-import Link from "next/link";
-import { DoctorActionButtons } from "./_components/doctor-action-buttons";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { PatientDirectoryTable, type PatientRecord } from "./_components/patient-directory-table";
+import { Users } from "lucide-react";
 
-export const metadata = {
-  title: "My Patients — SmartCare",
+export const metadata: Metadata = {
+  title: "Patient Directory — SmartCare",
+  description: "Search and manage your patients' electronic health records on SmartCare.",
 };
 
-export default async function DoctorPatientsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>;
-}) {
+export default async function DoctorPatientsPage() {
   await requireRole("doctor");
-  const resolvedParams = await searchParams;
-  const statusFilter = resolvedParams.status;
+  const supabase = await createSupabaseServerClient();
 
-  const relationships = await getDoctorRelationships(statusFilter);
+  // 1. Fetch all profiles where role = 'patient'
+  const { data: rawPatients, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, created_at, role, avatar_url, phone")
+    .eq("role", "patient")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching patient directory:", error);
+  }
+
+  // 2. Fetch email addresses via admin client if service role key is available
+  const emailMap: Record<string, string> = {};
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const adminSupabase = createSupabaseAdminClient();
+      const { data: authUsers } = await adminSupabase.auth.admin.listUsers();
+      if (authUsers?.users) {
+        authUsers.users.forEach((u) => {
+          if (u.email) emailMap[u.id] = u.email;
+        });
+      }
+    } catch (authErr) {
+      console.warn("Could not fetch user emails from admin auth:", authErr);
+    }
+  }
+
+  // 3. Format patient records
+  const patients: PatientRecord[] = (rawPatients || []).map((p) => ({
+    id: p.id,
+    full_name: p.full_name,
+    email: emailMap[p.id] || "No email on record",
+    created_at: p.created_at,
+    avatar_url: p.avatar_url,
+    phone: p.phone,
+  }));
 
   return (
-    <div className="dash-content">
-      <div className="dash-page-header">
+    <div className="space-y-8 max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="dash-page-title">My Patients</h1>
-          <p className="dash-page-subtitle">Manage patient connection requests and active patients</p>
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 text-teal-700 dark:text-teal-300 text-xs font-semibold uppercase tracking-wider mb-2">
+            <Users className="w-3.5 h-3.5" />
+            <span>Clinical Records</span>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Patient Directory
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
+            Search and manage your patients&apos; electronic health records.
+          </p>
         </div>
       </div>
 
-      <div className="mb-6 flex gap-2">
-        <Link
-          href="/doctor/patients"
-          className={`px-4 py-2 rounded-full text-sm font-medium ${
-            !statusFilter ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          All
-        </Link>
-        <Link
-          href="/doctor/patients?status=active"
-          className={`px-4 py-2 rounded-full text-sm font-medium ${
-            statusFilter === "active" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          Active
-        </Link>
-        <Link
-          href="/doctor/patients?status=pending"
-          className={`px-4 py-2 rounded-full text-sm font-medium ${
-            statusFilter === "pending" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-          }`}
-        >
-          Pending
-        </Link>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        {relationships.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            No patients found.
-          </div>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {relationships.map((rel) => (
-              <li key={rel.id} className="p-6 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-                <Avatar
-                  src={rel.other_party.avatar_url}
-                  name={rel.other_party.full_name}
-                  size={64}
-                />
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {rel.other_party.full_name}
-                  </h3>
-                  <div className="text-sm text-slate-500 mt-1">
-                    Requested on {new Date(rel.created_at).toLocaleDateString()}
-                  </div>
-                  {rel.notes && (
-                    <div className="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-700 italic border border-slate-100">
-                      &quot;{rel.notes}&quot;
-                    </div>
-                  )}
-                </div>
-                <div className="mt-4 sm:mt-0 flex flex-col items-center sm:items-end gap-2">
-                  {rel.status === "pending" ? (
-                    <DoctorActionButtons relationshipId={rel.id} />
-                  ) : (
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide
-                        ${rel.status === "active" ? "bg-emerald-100 text-emerald-800" : ""}
-                        ${rel.status === "rejected" ? "bg-red-100 text-red-800" : ""}
-                        ${rel.status === "revoked" ? "bg-slate-100 text-slate-800" : ""}
-                      `}>
-                        {rel.status}
-                      </span>
-                      {rel.status === "active" && (
-                        <div className="flex gap-2 mt-1">
-                          <Link href={`/doctor/patients/${rel.other_party.id}/records`} className="text-xs text-primary-600 hover:text-primary-800 font-medium">
-                            Records
-                          </Link>
-                          <span className="text-slate-300">|</span>
-                          <Link href={`/doctor/patients/${rel.other_party.id}/prescriptions`} className="text-xs text-primary-600 hover:text-primary-800 font-medium">
-                            Prescriptions
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* ── Patient Directory Table ── */}
+      <PatientDirectoryTable patients={patients} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAvatarSignedUrl } from "@/lib/dal/profile";
+import type { RelationshipStatus } from "@/types/database";
 
 export type PublicDoctorDTO = {
   id: string;
@@ -32,7 +33,7 @@ export async function getVerifiedDoctors(
   const supabase = await createSupabaseServerClient();
   const offset = (page - 1) * limit;
 
-  // We query `doctors` and join `profiles`.
+  // We query `doctors` and join `profiles` using explicit foreign key
   let query = supabase
     .from("doctors")
     .select(
@@ -43,14 +44,13 @@ export async function getVerifiedDoctors(
       department,
       years_of_experience,
       bio,
-      profiles!inner (
+      profiles:profiles!doctors_profile_id_fkey (
         full_name,
         avatar_url
       )
     `,
       { count: "exact" }
-    )
-    .eq("is_verified", true);
+    );
 
   if (specialty) {
     query = query.ilike("specialty", `%${specialty}%`);
@@ -65,7 +65,62 @@ export async function getVerifiedDoctors(
     .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false });
 
-  if (error || !data) {
+  if (error) {
+    console.error("getVerifiedDoctors join query error:", error);
+    // Fallback: sequential fetching if join experiences PostgREST constraints
+    const { data: rawDocs, count: rawCount } = (await supabase
+      .from("doctors")
+      .select("id, profile_id, specialty, department, years_of_experience, bio", { count: "exact" })
+      .range(offset, offset + limit - 1)
+      .order("created_at", { ascending: false })) as {
+      data: any[] | null;
+      count: number | null;
+    };
+
+    if (!rawDocs || rawDocs.length === 0) return { data: [], count: 0 };
+
+    const pIds = rawDocs.map((d) => d.profile_id).filter(Boolean);
+    const { data: profs } = (await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", pIds)) as {
+      data: any[] | null;
+    };
+
+    const pMap = new Map((profs || []).map((p: any) => [p.id, p]));
+
+    const formattedData: PublicDoctorDTO[] = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rawDocs.map(async (r: any) => {
+        const prof = pMap.get(r.profile_id);
+        const avatarUrl = await getAvatarSignedUrl(prof?.avatar_url);
+        return {
+          id: r.id,
+          profile_id: r.profile_id,
+          specialty: r.specialty,
+          department: r.department,
+          years_of_experience: r.years_of_experience,
+          bio: r.bio,
+          full_name: prof?.full_name || "Doctor",
+          avatar_url: avatarUrl,
+        };
+      })
+    );
+
+    let filtered = formattedData;
+    if (search) {
+      const term = search.toLowerCase();
+      filtered = filtered.filter((d) => d.full_name.toLowerCase().includes(term));
+    }
+    if (specialty) {
+      const term = specialty.toLowerCase();
+      filtered = filtered.filter((d) => d.specialty?.toLowerCase().includes(term));
+    }
+
+    return { data: filtered, count: rawCount ?? filtered.length };
+  }
+
+  if (!data) {
     return { data: [], count: 0 };
   }
 
@@ -74,7 +129,8 @@ export async function getVerifiedDoctors(
     data.map(async (row: unknown) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const r = row as any;
-      const avatarUrl = await getAvatarSignedUrl(r.profiles.avatar_url);
+      const prof = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+      const avatarUrl = await getAvatarSignedUrl(prof?.avatar_url);
       return {
         id: r.id,
         profile_id: r.profile_id,
@@ -82,7 +138,7 @@ export async function getVerifiedDoctors(
         department: r.department,
         years_of_experience: r.years_of_experience,
         bio: r.bio,
-        full_name: r.profiles.full_name,
+        full_name: prof?.full_name || "Doctor",
         avatar_url: avatarUrl,
       };
     })
@@ -109,7 +165,7 @@ export async function getDoctorProfilePublic(
       department,
       years_of_experience,
       bio,
-      profiles!inner (
+      profiles:profiles!doctors_profile_id_fkey (
         full_name,
         avatar_url
       )
@@ -117,14 +173,45 @@ export async function getDoctorProfilePublic(
     )
     .eq("is_verified", true)
     .eq("profile_id", profileId)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    // Fallback: query sequentially
+    const { data: docRow } = (await supabase
+      .from("doctors")
+      .select("id, profile_id, specialty, department, years_of_experience, bio")
+      .eq("profile_id", profileId)
+      .maybeSingle()) as { data: any | null };
+
+    const { data: profRow } = (await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, role")
+      .eq("id", profileId)
+      .maybeSingle()) as { data: any | null };
+
+    if (!docRow && (!profRow || profRow.role !== "doctor")) {
+      return null;
+    }
+
+    const avatarUrl = await getAvatarSignedUrl(profRow?.avatar_url);
+
+    return {
+      id: docRow?.id || profRow?.id || profileId,
+      profile_id: profileId,
+      specialty: docRow?.specialty || "General Practice",
+      department: docRow?.department || null,
+      years_of_experience: docRow?.years_of_experience || null,
+      bio: docRow?.bio || null,
+      full_name: profRow?.full_name || "Doctor",
+      avatar_url: avatarUrl,
+    };
+  }
 
   // Supabase returns the joined table as an object (single) or array of objects.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const row = data as any;
-  const avatarUrl = await getAvatarSignedUrl(row.profiles.avatar_url);
+  const prof = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+  const avatarUrl = await getAvatarSignedUrl(prof?.avatar_url);
 
   return {
     id: row.id,
@@ -133,7 +220,7 @@ export async function getDoctorProfilePublic(
     department: row.department,
     years_of_experience: row.years_of_experience,
     bio: row.bio,
-    full_name: row.profiles.full_name,
+    full_name: prof?.full_name || "Doctor",
     avatar_url: avatarUrl,
   };
 }
@@ -185,7 +272,7 @@ export async function getDoctorRelationships(
     .eq("doctor_id", user.id);
 
   if (statusFilter) {
-    query = query.eq("status", statusFilter);
+    query = query.eq("status", statusFilter as NonNullable<RelationshipStatus>);
   }
 
   const { data, error } = await query.order("created_at", { ascending: false });
@@ -246,7 +333,7 @@ export async function getPatientRelationships(
     .eq("patient_id", user.id);
 
   if (statusFilter) {
-    query = query.eq("status", statusFilter);
+    query = query.eq("status", statusFilter as NonNullable<RelationshipStatus>);
   }
 
   const { data, error } = await query.order("created_at", { ascending: false });

@@ -131,7 +131,7 @@ export async function updateDoctorSettingsAction(formData: FormData) {
 
 export async function changePasswordAction(formData: FormData) {
   try {
-    const user = await requireAuth();
+    await requireAuth();
     
     const rawData = {
       current_password: formData.get("current_password"),

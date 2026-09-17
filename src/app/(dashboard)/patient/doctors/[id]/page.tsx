@@ -81,7 +81,17 @@ export default async function DoctorProfilePage({
           )}
         </div>
 
-        <RequestConnectionForm doctorId={doctor.profile_id} />
+        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-4">
+          <Link
+            href={`/patient/book/${doctor.profile_id}`}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-xl shadow-sm transition-all"
+          >
+            <span>Book Appointment</span>
+          </Link>
+          <div className="w-full sm:flex-1">
+            <RequestConnectionForm doctorId={doctor.profile_id} />
+          </div>
+        </div>
       </div>
     </div>
   );
