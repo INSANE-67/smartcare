@@ -7,6 +7,7 @@ import { getPatientPrescriptions } from "@/lib/dal/prescriptions";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AppointmentStatusBadge } from "@/components/ui/appointment-status-badge";
+import { RuralCareCard } from "@/components/dashboard/RuralCareCard";
 import {
   Calendar,
   CalendarPlus,
@@ -179,6 +180,11 @@ export default async function PatientDashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          RURAL TELE-CLINIC & DIGITAL EQUITY MODE
+          ══════════════════════════════════════════════════════════════════════ */}
+      <RuralCareCard />
 
       {/* ══════════════════════════════════════════════════════════════════════
           TWO-COLUMN MAIN GRID: LEFT (70% - Span 8) / RIGHT (30% - Span 4)
