@@ -173,17 +173,25 @@ export async function getDoctorDashboardData(): Promise<{
   const cleanedName = rawName.replace(/^(dr\.?|doctor)\s+/i, "").trim();
   const doctorDisplayName = cleanedName ? `Dr. ${cleanedName}` : "Dr. Specialist";
 
+  // Coerce specialty to a plain string — guards against Supabase returning a
+  // joined object when schema relations are present (would cause React #441).
+  const rawSpecialty = docRow?.specialty;
+  const specialtyStr: string =
+    typeof rawSpecialty === "string" && rawSpecialty.trim()
+      ? rawSpecialty.trim()
+      : "General Practice";
+
   const doctorInfo: DoctorProfileInfo = {
     id: user.id,
     fullName: rawName || "Doctor",
     doctorDisplayName,
-    specialty: docRow?.specialty || "General Practice",
-    department: docRow?.department || null,
-    clinicName: docRow?.clinic_name || null,
-    clinicAddress: docRow?.clinic_address || null,
+    specialty: specialtyStr,
+    department: typeof docRow?.department === "string" ? docRow.department : null,
+    clinicName: typeof docRow?.clinic_name === "string" ? docRow.clinic_name : null,
+    clinicAddress: typeof docRow?.clinic_address === "string" ? docRow.clinic_address : null,
     yearsOfExperience: docRow?.years_of_experience ?? null,
-    licenseNumber: docRow?.license_number || null,
-    bio: docRow?.bio || null,
+    licenseNumber: typeof docRow?.license_number === "string" ? docRow.license_number : null,
+    bio: typeof docRow?.bio === "string" ? docRow.bio : null,
     isVerified: docRow?.is_verified ?? user.is_verified ?? false,
     avatarUrl: profileRow?.avatar_url || user.avatar_url || null,
     email: user.email || null,
@@ -248,21 +256,6 @@ export async function getDoctorDashboardData(): Promise<{
   const allDoctorApts = rawApts.filter(
     (a) => !a.doctor_id || doctorMatchIds.includes(a.doctor_id)
   );
-
-  const fs = require('fs');
-  fs.writeFileSync('dal_audit.json', JSON.stringify({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    queryFilters: {
-      select: "id, patient_id, doctor_id, appointment_date, appointment_time, status, reason, notes",
-      neq1: ["status", "cancelled"],
-      neq2: ["status", "rejected"],
-      order1: ["appointment_date", { ascending: true }],
-      order2: ["appointment_time", { ascending: true }]
-    },
-    doctorMatchIds,
-    aptsRes,
-    allDoctorApts
-  }, null, 2));
 
   console.log("===== FILTER DEBUG =====");
   console.log("targetDates:", targetDates);
@@ -355,20 +348,32 @@ export async function getDoctorDashboardData(): Promise<{
       statusColor = "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-800";
     }
 
-    const dateBadge = formatDateBadge(apt.appointment_date, localTodayStr);
+    // Guard against null/undefined appointment_date before calling formatDateBadge
+    const dateBadge = apt.appointment_date
+      ? formatDateBadge(apt.appointment_date, localTodayStr)
+      : "";
 
     return {
       id: apt.id,
       patientId: apt.patient_id,
       patientName,
       patientAge,
-      patientGender: patient?.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1) : null,
-      appointmentDate: apt.appointment_date,
+      patientGender:
+        patient?.gender
+          ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)
+          : null,
+      appointmentDate: apt.appointment_date ?? "",
       dateBadge,
       time: apt.appointment_time ? apt.appointment_time.slice(0, 5) : "—",
-      duration: docRow?.appointment_duration ? `${docRow.appointment_duration} min` : "30 min",
-      type: apt.reason || "Consultation",
-      status: apt.status ? apt.status.charAt(0).toUpperCase() + apt.status.slice(1) : "Pending",
+      duration: docRow?.appointment_duration
+        ? `${docRow.appointment_duration} min`
+        : "30 min",
+      type: typeof apt.reason === "string" && apt.reason.trim()
+        ? apt.reason.trim()
+        : "Consultation",
+      status: apt.status
+        ? apt.status.charAt(0).toUpperCase() + apt.status.slice(1)
+        : "Pending",
       statusColor,
       isUrgent,
     };
@@ -401,15 +406,26 @@ export async function getDoctorDashboardData(): Promise<{
   }
 
   const insights: DoctorAiInsightItem[] = notesList.map((note) => {
-    const timeAgo = formatTimeAgo(new Date(note.created_at));
+    // Guard against null/missing created_at — fall back to current time
+    const createdAtDate = note.created_at ? new Date(note.created_at) : new Date();
+    const timeAgo = isNaN(createdAtDate.getTime()) ? "Recently" : formatTimeAgo(createdAtDate);
+
     const patientName = notePatientMap.get(note.patient_id);
-    const title = note.diagnosis
-      ? (patientName ? `${patientName} — ${note.diagnosis}` : `Diagnosis: ${note.diagnosis}`)
-      : (patientName ? `${patientName} — Clinical Note` : "Clinical Consultation Note");
+
+    // Coerce diagnosis/treatment strings to avoid rendering raw objects
+    const diagnosisStr = typeof note.diagnosis === "string" ? note.diagnosis.trim() : "";
+    const title = diagnosisStr
+      ? patientName
+        ? `${patientName} — ${diagnosisStr}`
+        : `Diagnosis: ${diagnosisStr}`
+      : patientName
+        ? `${patientName} — Clinical Note`
+        : "Clinical Consultation Note";
+
     const description =
-      note.treatment_plan ||
-      note.observations ||
-      note.symptoms ||
+      (typeof note.treatment_plan === "string" && note.treatment_plan.trim()) ||
+      (typeof note.observations === "string" && note.observations.trim()) ||
+      (typeof note.symptoms === "string" && note.symptoms.trim()) ||
       "Consultation encounter record documented for patient chart.";
 
     return {
@@ -418,7 +434,10 @@ export async function getDoctorDashboardData(): Promise<{
       title,
       description,
       time: timeAgo,
-      badge: note.follow_up_date ? `Follow-up: ${note.follow_up_date}` : "Clinical Note",
+      badge:
+        typeof note.follow_up_date === "string" && note.follow_up_date
+          ? `Follow-up: ${note.follow_up_date}`
+          : "Clinical Note",
       badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
     };
   });

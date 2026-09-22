@@ -10,7 +10,10 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Dashboard Error:", error);
+    console.error("Doctor dashboard error:", error);
+    if (error.digest) {
+      console.error("Error digest (minified React error trace):", error.digest);
+    }
   }, [error]);
 
   return (

@@ -49,11 +49,6 @@ export default async function DoctorDashboardPage() {
   const hour = new Date().getHours();
   const timeGreeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
-  console.log("Doctor Dashboard Render");
-  console.log("todayAppointments.length:", todayAppointments.length);
-  console.log("todayAppointments:", todayAppointments);
-  console.log("stats:", stats);
-
   return (
     <div className="space-y-10 max-w-[1600px] mx-auto">
       {/* ══════════════════════════════════════════════════════════════════════
@@ -276,9 +271,9 @@ export default async function DoctorDashboardPage() {
                           )}
                           <span
                             className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded-full border ${
-                              apt.status.toLowerCase() === "pending"
+                              (apt.status ?? "").toLowerCase() === "pending"
                                 ? "bg-[#FEF9C3] text-[#854D0E] border-[#FEF08A]"
-                                : apt.status.toLowerCase() === "confirmed"
+                                : (apt.status ?? "").toLowerCase() === "confirmed"
                                 ? "bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]"
                                 : "bg-[#F1F5F9] text-[#475569] border-[#E2E8F0]"
                             }`}
@@ -293,7 +288,7 @@ export default async function DoctorDashboardPage() {
                     </div>
 
                     <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                      {apt.status.toLowerCase() === "pending" ? (
+                      {(apt.status ?? "").toLowerCase() === "pending" ? (
                         <Link
                           href="/doctor/appointments"
                           className="btn-secondary py-2 px-4 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 shadow-2xs"
